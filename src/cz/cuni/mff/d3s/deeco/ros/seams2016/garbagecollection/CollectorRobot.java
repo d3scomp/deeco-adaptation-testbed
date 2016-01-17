@@ -43,7 +43,9 @@ public class CollectorRobot {
 		this.position = new Position(0, 0, 0);
 		this.clock = clock;
 
+		// Set waypoints and initial goal
 		route = garbage;
+		goal = route.get(0);
 	}
 
 	@Process
@@ -62,9 +64,9 @@ public class CollectorRobot {
 			@In("clock") CurrentTimeProvider clock, @In("goal") Position goal, @In("route") List<Position> route) {
 
 		System.out.format("%d: Id: %s, pos: %s%n", clock.getCurrentMilliseconds(), id, position.toString());
-		System.out.format("%d: Id: %s, goal: %s remaining:%n", clock.getCurrentMilliseconds(), id, goal.toString());
+		System.out.format("%d: Id: %s, goal: %s (dist: %f) remaining:%n", clock.getCurrentMilliseconds(), id, goal.toString(), goal.euclidDistanceTo(position));
 		for(Position p: route) {
-			System.out.format(">>> %s%n", p.toString());
+			System.out.format(">>> %s (dist: %f)%n", p.toString(), p.euclidDistanceTo(position));
 		}
 	}
 
@@ -74,21 +76,19 @@ public class CollectorRobot {
 			@In("positioning") Positioning positioning, @InOut("route") ParamHolder<List<Position>> route,
 			@InOut("goal") ParamHolder<Position> goal, @In("clock") CurrentTimeProvider clock) throws Exception {
 
-		// If goal not set go to the first one
-		if (goal.value == null) {
-			goal.value = route.value.get(0);
-			System.out.format("%d: Id: %s, initial goal set.%n", clock.getCurrentMilliseconds(), id);
-		}
-
 		if (positioning.getMoveBaseResult() != null) {
 			switch (positioning.getMoveBaseResult().status) {
 			case Succeeded:
-				Position reached = route.value.get(0);
+				Position reached = goal.value;
 				System.out.format("%d: Id: %s, at: %s reached %s%n", clock.getCurrentMilliseconds(), id, position, reached);
 				route.value.remove(reached);
-				goal.value = route.value.get(0);
-
-				positioning.setSimpleGoal(ROSPosition.fromPosition(goal.value), new Orientation(0, 0, 0, 1));
+				
+				if(route.value.isEmpty()) {
+					System.out.println("No more waypoints to reach");
+				} else {
+					goal.value = route.value.get(0);
+					positioning.setSimpleGoal(ROSPosition.fromPosition(goal.value), new Orientation(0, 0, 0, 1));
+				}
 				break;
 			case Rejected:
 				positioning.setSimpleGoal(ROSPosition.fromPosition(goal.value), new Orientation(0, 0, 0, 1));

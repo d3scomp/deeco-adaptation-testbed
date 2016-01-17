@@ -59,9 +59,13 @@ public class CollectorRobot {
 	@Process
 	@PeriodicScheduling(period = 1000)
 	public static void reportStatus(@In("id") String id, @In("position") Position position,
-			@In("clock") CurrentTimeProvider clock) {
+			@In("clock") CurrentTimeProvider clock, @In("goal") Position goal, @In("route") List<Position> route) {
 
 		System.out.format("%d: Id: %s, pos: %s%n", clock.getCurrentMilliseconds(), id, position.toString());
+		System.out.format("%d: Id: %s, goal: %s remaining:%n", clock.getCurrentMilliseconds(), id, goal.toString());
+		for(Position p: route) {
+			System.out.format(">>> %s%n", p.toString());
+		}
 	}
 
 	@Process
@@ -82,7 +86,6 @@ public class CollectorRobot {
 				Position reached = route.value.get(0);
 				System.out.format("%d: Id: %s, at: %s reached %s%n", clock.getCurrentMilliseconds(), id, position, reached);
 				route.value.remove(reached);
-				route.value.add(reached);
 				goal.value = route.value.get(0);
 
 				positioning.setSimpleGoal(ROSPosition.fromPosition(goal.value), new Orientation(0, 0, 0, 1));

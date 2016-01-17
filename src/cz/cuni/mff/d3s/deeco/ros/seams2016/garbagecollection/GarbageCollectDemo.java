@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import cz.cuni.mff.d3s.deeco.ros.seams2016.garbagecollection.PositionGenerator.Area;
 import cz.cuni.mff.d3s.deeco.runners.DEECoSimulation;
 import cz.cuni.mff.d3s.deeco.runtime.DEECoNode;
 import cz.cuni.mff.d3s.jdeeco.network.Network;
@@ -23,15 +24,29 @@ import cz.cuni.mff.d3s.jdeeco.ros.sim.ROSSimulation;
  *
  */
 public class GarbageCollectDemo {
+	private static int TOTAL_GARBAGE = 20;
+	
 	private static final List<Position> garbage = new LinkedList<>();
 	private static final List<Position> garbage1 = new LinkedList<>();
 	private static final List<Position> garbage2 = new LinkedList<>();
 	
 	static {
+		PositionGenerator generator = new PositionGenerator(new Random(42));
+		generator.addArea(new Area(0.25, 1.6, 15.5, 17)); // Kitchen
+		generator.addArea(new Area(2, 5, 14.1, 17.4)); // Corridor left
+		generator.addArea(new Area(6, 14.5, 14.1, 17.4)); // Corridor center left
+		generator.addArea(new Area(15.5, 24, 14.1, 17.4)); // Corridor center right
+		generator.addArea(new Area(25, 29, 14.1, 17.4)); // Corridor right
+		generator.addArea(new Area(11.75, 14, 5, 11)); // Office
+		
+		
 		// Garbage positions
-		garbage.add(new Position(13, 2, 0));
+		for(int i = 0; i < TOTAL_GARBAGE; ++i) {
+			garbage.add(generator.getRandomPosition());
+		}
+		/*garbage.add(new Position(13, 2, 0));
 		garbage.add(new Position(3, 14, 0));
-		garbage.add(new Position(27, 14, 0));
+		garbage.add(new Position(27, 14, 0));*/
 		
 		Collections.shuffle(garbage, new Random(42));
 		
@@ -69,7 +84,7 @@ public class GarbageCollectDemo {
 //		robot1.deployEnsemble(LeaderFollowerEnsemble.class);
 		
 		// Simulate for specified time
-		realm.start(60_000);
+		realm.start(180_000);
 			
 		System.out.println("!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#");
 		System.out.println("!@!#!@!#@!@#!@#!@# As we cannot make ROS exit nicely we are now going to terminate the whole JVM !@#!@#!@#!@#!@#!@#");

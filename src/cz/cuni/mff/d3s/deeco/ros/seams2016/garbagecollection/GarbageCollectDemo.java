@@ -32,12 +32,15 @@ public class GarbageCollectDemo {
 	
 	static {
 		PositionGenerator generator = new PositionGenerator(new Random(42));
-		generator.addArea(new Area(0.25, 1.6, 15.5, 17)); // Kitchen
-		generator.addArea(new Area(2, 5, 14.1, 17.4)); // Corridor left
-		generator.addArea(new Area(6, 14.5, 14.1, 17.4)); // Corridor center left
-		generator.addArea(new Area(15.5, 24, 14.1, 17.4)); // Corridor center right
-		generator.addArea(new Area(25, 29, 14.1, 17.4)); // Corridor right
-		generator.addArea(new Area(11.75, 14, 5, 11)); // Office
+		generator.addArea(new Area(00.05, 01.05, 11.1, 13.10)); // Kitchen
+		generator.addArea(new Area(12.00, 13.75, 1.00, 8.00)); // Office
+		
+		generator.addArea(new Area(02.25, 04.75, 10.50, 13.75)); // Corridor left
+		generator.addArea(new Area(06.25, 14.25, 10.50, 13.75)); // Corridor center left
+		generator.addArea(new Area(15.75, 23.75, 10.50, 13.75)); // Corridor center right
+		generator.addArea(new Area(25.25, 28.75, 10.50, 13.75)); // Corridor right
+		
+		
 		
 		
 		// Garbage positions

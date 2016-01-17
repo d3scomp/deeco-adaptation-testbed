@@ -1,5 +1,6 @@
 package cz.cuni.mff.d3s.deeco.ros.seams2016.garbagecollection;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -34,8 +35,9 @@ public class PositionGenerator {
 	private List<Area> areas = new LinkedList<>();
 	private Random random;
 	
-	public PositionGenerator(Random random) {
+	public PositionGenerator(Random random, Area... areas) {
 		this.random = random;
+		this.areas.addAll(Arrays.asList(areas));
 	}
 	
 	public void addArea(Area area) {

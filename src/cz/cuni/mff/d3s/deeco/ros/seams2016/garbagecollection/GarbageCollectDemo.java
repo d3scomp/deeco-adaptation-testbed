@@ -28,12 +28,14 @@ public class GarbageCollectDemo {
 	private static String[] colors = {
 			"red",
 			"blue",
-			"green"
+			"green",
+			"black"
 	};
 	private static PositionPlugin[] positionPlugins = {
 			new PositionPlugin(12, 13.5),
 			new PositionPlugin(26, 11),
-			new PositionPlugin(28, 11)
+			new PositionPlugin(28, 11),
+			new PositionPlugin(9, 11)
 	};	
 	private static PositionGenerator generator = new PositionGenerator(
 			new Random(42),

@@ -33,7 +33,7 @@ public class PositionMonitor {
 
 		@Override
 		public String toString() {
-			return String.format("[%s, initialOwner: %s, reachedBy: %s (%dms)]", position.toString(), initialOwner,
+			return String.format("[%s, initialOwner: %s, reachedBy: %s, time: %d ms]", position.toString(), initialOwner,
 					isReached() ? reachedBy : "none", reachedAtMs);
 		}
 	}

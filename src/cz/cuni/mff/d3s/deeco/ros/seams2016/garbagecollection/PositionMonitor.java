@@ -59,7 +59,6 @@ public class PositionMonitor {
 
 	public void reportReached(Position position, String reachedBy) {
 		positions.get(position).reached(reachedBy, clock.getCurrentMilliseconds());
-		printStatus();
 	}
 
 	public void printStatus() {

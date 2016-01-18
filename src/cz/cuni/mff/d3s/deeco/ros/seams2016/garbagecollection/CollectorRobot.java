@@ -43,12 +43,16 @@ public class CollectorRobot {
 
 	@Local
 	public CurrentTimeProvider clock;
+	
+	@Local
+	public PositionMonitor monitor;
 
-	public CollectorRobot(String id, Positioning positioning, CurrentTimeProvider clock, List<Position> garbage) {
+	public CollectorRobot(String id, Positioning positioning, CurrentTimeProvider clock, List<Position> garbage, PositionMonitor monitor) {
 		this.id = id;
 		this.positioning = positioning;
 		this.position = new Position(0, 0, 0);
 		this.clock = clock;
+		this.monitor = monitor;
 
 		// Set waypoints and initial goal
 		route = garbage;
@@ -82,8 +86,11 @@ public class CollectorRobot {
 	@Process
 	@PeriodicScheduling(period = 500)
 	public static void setGoal(@In("id") String id, @InOut("route") ParamHolder<List<Position>> route,
-			@InOut("goal") ParamHolder<Goal> goal, @In("clock") CurrentTimeProvider clock) {
+			@InOut("goal") ParamHolder<Goal> goal, @In("clock") CurrentTimeProvider clock, @In("monitor") PositionMonitor monitor) {
 		if(goal.value.reached) {
+			// Report to monitor
+			monitor.reportReached(goal.value.position, id);
+			
 			// Remove reached waypoint
 			route.value.remove(goal.value.position);
 			

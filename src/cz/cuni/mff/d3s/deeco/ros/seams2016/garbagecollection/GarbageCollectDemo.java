@@ -48,6 +48,7 @@ public class GarbageCollectDemo {
 	);
 		
 	public static void main(String[] args) throws Exception {
+		// Simulation
 		ROSSimulation rosSim = new ROSSimulation("192.168.56.101", 11311, "192.168.56.1", "corridor", 0.02, 100);
 
 		// Create main application container
@@ -58,23 +59,30 @@ public class GarbageCollectDemo {
 		realm.addPlugin(DefaultKnowledgePublisher.class);
 		realm.addPlugin(KnowledgeInsertingStrategy.class);
 		realm.addPlugin(BeeClick.class);
+		
+		PositionMonitor monitor = new PositionMonitor(rosSim.getTimer());
 				
 		// Add robots
 		for(int i = 0; i < ROBOTS; ++i) {
+			final String name = "Collector" + i; 
 			List<Position> garbage = new LinkedList<>();
 			for(int j = 0; j < GARBAGE_PER_ROBOT; ++j) {
-				garbage.add(generator.getRandomPosition());
+				Position pos = generator.getRandomPosition();
+				garbage.add(pos);
+				monitor.addPosition(pos, name);
 			}
 			
 			Positioning positioning = new Positioning();
 			DEECoNode robot = realm.createNode(i, positioning, rosSim.createROSServices(colors[i]), positionPlugins[i]);
-			robot.deployComponent(new CollectorRobot("Collector" + i, positioning, rosSim.getTimer(), garbage));
+			robot.deployComponent(new CollectorRobot(name, positioning, rosSim.getTimer(), garbage, monitor));
 //			robot.deployEnsemble(LeaderFollowerEnsemble.class);
 		}
 		
 		// Simulate for specified time
 		realm.start(240_000);
-			
+		
+		monitor.printStatus();
+		
 		System.out.println("!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#");
 		System.out.println("!@!#!@!#@!@#!@#!@# As we cannot make ROS exit nicely we are now going to terminate the whole JVM !@#!@#!@#!@#!@#!@#");
 		System.out.println("!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#!@#!@#!#!@!#!@!#@!@#");

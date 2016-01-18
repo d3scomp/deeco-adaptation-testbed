@@ -24,18 +24,22 @@ import cz.cuni.mff.d3s.jdeeco.ros.sim.ROSSimulation;
  */
 public class GarbageCollectDemo {
 	private static int GARBAGE_PER_ROBOT = 10;
-	private static int ROBOTS = 3;
+	private static int ROBOTS = 4;
 	private static String[] colors = {
 			"red",
 			"blue",
 			"green",
-			"black"
+			"black",
+			"gray"
 	};
 	private static PositionPlugin[] positionPlugins = {
-			new PositionPlugin(12, 13.5),
+			new PositionPlugin(12, 13),
 			new PositionPlugin(26, 11),
 			new PositionPlugin(28, 11),
-			new PositionPlugin(9, 11)
+			new PositionPlugin(9, 11),
+			new PositionPlugin(11, 13),
+			new PositionPlugin(10, 13),
+			new PositionPlugin(9, 13),
 	};	
 	private static PositionGenerator generator = new PositionGenerator(
 			new Random(42),

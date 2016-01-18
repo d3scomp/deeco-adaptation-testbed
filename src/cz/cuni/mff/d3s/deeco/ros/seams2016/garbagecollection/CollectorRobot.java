@@ -129,9 +129,6 @@ public class CollectorRobot {
 				System.out.format("%d: Id: %s, unknown result: %s%n", clock.getCurrentMilliseconds(), id,
 						positioning.getMoveBaseResult().toString());
 			}
-
-			System.out.format("%d: Id: %s, result: %s%n", clock.getCurrentMilliseconds(), id,
-					positioning.getMoveBaseResult().toString());
 		} else {
 			positioning.setSimpleGoal(ROSPosition.fromPosition(goal.value.position), new Orientation(0, 0, 0, 1));
 		}

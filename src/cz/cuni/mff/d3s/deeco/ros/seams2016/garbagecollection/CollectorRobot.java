@@ -89,7 +89,7 @@ public class CollectorRobot {
 			
 			// Try to set new goal
 			if(route.value.isEmpty()) {
-				System.out.format("%d: Id: %s, No more waypoints to reach", clock.getCurrentMilliseconds(), id);
+				System.out.format("%d: Id: %s, No more waypoints to reach%n", clock.getCurrentMilliseconds(), id);
 			} else {
 				goal.value.position = route.value.get(0);
 				goal.value.reached = false;
@@ -117,6 +117,7 @@ public class CollectorRobot {
 			case Canceled:
 				System.out.format("%d: Id: %s, Goal canceled: %s%n", clock.getCurrentMilliseconds(), id,
 						positioning.getMoveBaseResult().toString());
+				break;
 			default:
 				System.out.format("%d: Id: %s, unknown result: %s%n", clock.getCurrentMilliseconds(), id,
 						positioning.getMoveBaseResult().toString());

@@ -24,6 +24,7 @@ public class CollectorRobot {
 		private static final long serialVersionUID = 1L;
 		public Position position;
 		public boolean reached;
+		public boolean set;
 	}
 
 	enum State {
@@ -67,6 +68,7 @@ public class CollectorRobot {
 		route = garbage;
 		goal.position = route.get(0);
 		goal.reached = false;
+		goal.set = false;
 	}
 
 	@Process
@@ -84,9 +86,10 @@ public class CollectorRobot {
 	public static void reportStatus(@In("id") String id, @In("position") Position position,
 			@In("clock") CurrentTimeProvider clock, @In("goal") Goal goal, @In("route") List<Position> route,
 			@In("state") State state) {
-		System.out.format("%d: Id: %s, pos: %s, %s, goal: %s (dist: %f, reached: %s) remaining:%d%n",
+		System.out.format("%d: Id: %s, pos: %s, %s, goal: %s (dist: %f, reached: %s, set: %s) remaining:%d%n",
 				clock.getCurrentMilliseconds(), id, position.toString(), state, goal.position.toString(),
-				goal.position.euclidDistanceTo(position), String.valueOf(goal.reached), route.size());
+				goal.position.euclidDistanceTo(position), String.valueOf(goal.reached), String.valueOf(goal.set),
+				route.size());
 	}
 
 	@Process
@@ -107,6 +110,7 @@ public class CollectorRobot {
 			} else {
 				goal.value.position = route.value.get(0);
 				goal.value.reached = false;
+				goal.value.set = false;
 			}
 		}
 	}
@@ -116,20 +120,30 @@ public class CollectorRobot {
 	public static void driveRobot(@In("id") String id, @In("position") Position position,
 			@In("positioning") Positioning positioning, @InOut("goal") ParamHolder<Goal> goal,
 			@In("clock") CurrentTimeProvider clock, @Out("state") ParamHolder<State> state) throws Exception {
+		// Set goal if not yet set
+		if (!goal.value.set || positioning.getMoveBaseResult() == null) {
+			System.out.format("%d: Id: %s, Setting goal%n", clock.getCurrentMilliseconds(), id);
+			positioning.setSimpleGoal(ROSPosition.fromPosition(goal.value.position), new Orientation(0, 0, 0, 1));
+			goal.value.set = true;
+		}
 
-		if (positioning.getMoveBaseResult() != null) {
+		// Process move result
+		if (positioning.getMoveBaseResult() != null && !goal.value.reached) {
 			switch (positioning.getMoveBaseResult().status) {
 			case Succeeded:
 				goal.value.reached = true;
 				System.out.format("%d: Id: %s, at: %s reached %s%n", clock.getCurrentMilliseconds(), id, position,
 						goal.value.position);
-
-				positioning.setSimpleGoal(ROSPosition.fromPosition(goal.value.position), new Orientation(0, 0, 0, 1));
+				/*
+				 * positioning.setSimpleGoal(ROSPosition.fromPosition(goal.value.position), new Orientation(0, 0, 0,
+				 * 1)); goal.value.set = true;
+				 */
 				break;
 			case Rejected:
 				System.out.format("%d: Id: %s, at: %s rejected goal %s%n", clock.getCurrentMilliseconds(), id, position,
 						goal.value.position);
-				// positioning.setSimpleGoal(ROSPosition.fromPosition(goal.value.position), new Orientation(0, 0, 0, 1));
+				// positioning.setSimpleGoal(ROSPosition.fromPosition(goal.value.position), new Orientation(0, 0, 0,
+				// 1));
 				state.value = State.Blocked;
 				break;
 			case Canceled:
@@ -140,9 +154,6 @@ public class CollectorRobot {
 				System.out.format("%d: Id: %s, unknown result: %s%n", clock.getCurrentMilliseconds(), id,
 						positioning.getMoveBaseResult().toString());
 			}
-		} else {
-			System.out.format("%d: Id: %s, Setting initial goal%n", clock.getCurrentMilliseconds(), id);
-			positioning.setSimpleGoal(ROSPosition.fromPosition(goal.value.position), new Orientation(0, 0, 0, 1));
 		}
 	}
 }

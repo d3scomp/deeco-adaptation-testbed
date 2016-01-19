@@ -6,7 +6,6 @@ import cz.cuni.mff.d3s.deeco.annotations.Component;
 import cz.cuni.mff.d3s.deeco.annotations.In;
 import cz.cuni.mff.d3s.deeco.annotations.InOut;
 import cz.cuni.mff.d3s.deeco.annotations.Local;
-import cz.cuni.mff.d3s.deeco.annotations.Out;
 import cz.cuni.mff.d3s.deeco.annotations.PeriodicScheduling;
 import cz.cuni.mff.d3s.deeco.annotations.Process;
 import cz.cuni.mff.d3s.deeco.task.ParamHolder;
@@ -56,7 +55,8 @@ public class CollectorRobot {
 		this.position = new Position(0, 0, 0);
 		this.clock = clock;
 		this.monitor = monitor;
-		this.state = State.Free;
+		
+		state = State.Free;
 
 		// Set waypoints and initial goal
 		route = garbage;
@@ -82,9 +82,9 @@ public class CollectorRobot {
 			@In("clock") CurrentTimeProvider clock, @In("goalPosition") Position goalPosition,
 			@In("goalExchangePosition") Position goalExchangePosition, @In("goalReached") Boolean goalReached,
 			@In("goalSet") Boolean goalSet, @In("route") List<Position> route, @In("state") State state) {
-		System.out.format("%d: Id: %s", clock.getCurrentMilliseconds(), id);
-		System.out.format("pos: %s, state: %s", position.toString(), state);
-		System.out.format("goal: (pos: %s, dist: %f, reached: %s, set: %s, exchange: %s) remaining:%d%n",
+		System.out.format("%d: id: %s", clock.getCurrentMilliseconds(), id);
+		System.out.format(", pos: %s, state: %s", position.toString(), state);
+		System.out.format(", goal: (pos: %s, dist: %f, reached: %s, set: %s, exchange: %s) remaining:%d%n",
 				goalPosition.toString(), goalPosition.euclidDistanceTo(position), String.valueOf(goalReached),
 				String.valueOf(goalSet), goalExchangePosition != null?goalExchangePosition.toString():"none", route.size());
 	}
@@ -118,7 +118,7 @@ public class CollectorRobot {
 	public static void driveRobot(@In("id") String id, @In("position") Position position,
 			@In("positioning") Positioning positioning, @InOut("goalPosition") ParamHolder<Position> goalPosition,
 			@InOut("goalReached") ParamHolder<Boolean> goalReached, @InOut("goalSet") ParamHolder<Boolean> goalSet,
-			@In("clock") CurrentTimeProvider clock, @Out("state") ParamHolder<State> state) throws Exception {
+			@In("clock") CurrentTimeProvider clock, @InOut("state") ParamHolder<State> state) throws Exception {
 		// Set goal if not yet set
 		if (!goalSet.value || positioning.getMoveBaseResult() == null) {
 			System.out.format("%d: Id: %s, Setting goal%n", clock.getCurrentMilliseconds(), id);

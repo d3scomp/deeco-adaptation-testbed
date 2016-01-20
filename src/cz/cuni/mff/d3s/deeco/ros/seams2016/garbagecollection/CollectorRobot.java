@@ -115,7 +115,7 @@ public class CollectorRobot {
 		System.out.format("%d: id: %s", clock.getCurrentMilliseconds(), id);
 		System.out.format(", pos: %s, state: %s", position.toString(), state);
 		System.out.format(", goal: (pos: %s, dist: %f, set: %s) remaining:%d%n",
-		goal.toString(), goal.euclidDistanceTo(position), curGoal, route.size());
+		goal!=null?goal:"none", goal!=null?goal.euclidDistanceTo(position):-1.0, curGoal, route.size());
 	}
 
 	@Process
@@ -147,6 +147,7 @@ public class CollectorRobot {
 			System.out.println("New goal: " + goal.value);
 
 			state.value = State.Free;
+			blockedCounter.value = 0l;
 		}
 	}
 

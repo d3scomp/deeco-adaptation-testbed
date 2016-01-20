@@ -49,11 +49,11 @@ public class GarbageCollectDemo {
 			new Random(42),
 /*			new Area(00.05, 01.05, 11.1, 13.10), // Kitchen*/
 			new Area(11.50, 13.50, 1.00, 8.00), // Office1
-			new Area(16.50, 18.25, 1.00, 8.00), // Office2
-			new Area(02.25, 04.75, 10.50, 13.75), // Corridor left
+			new Area(16.50, 18.25, 1.00, 8.00) // Office2
+		/*	new Area(02.25, 04.75, 10.50, 13.75), // Corridor left
 			new Area(06.25, 14.25, 10.50, 13.75), // Corridor center left
 			new Area(15.75, 23.75, 10.50, 13.75), // Corridor center right
-			new Area(25.25, 28.75, 10.50, 13.75) // Corridor right);
+			new Area(25.25, 28.75, 10.50, 13.75) // Corridor right);*/
 	);
 		
 	public static void main(String[] args) throws Exception {

@@ -33,8 +33,8 @@ public class CollectorRobot {
 		GoalChange, RandomGoal
 	}
 
-	static final int BLOCKED_AUTORECOVERY_THRESHOLD_S = 10;
-	static final long NO_POS_CHANGE_BLOCKED_THRESHOLD = 15;
+	static final int BLOCKED_AUTORECOVERY_THRESHOLD_S = 5;
+	static final long NO_POS_CHANGE_BLOCKED_THRESHOLD = 5;
 
 	public Position goal;
 	public Position exchangeGoal;
@@ -166,7 +166,7 @@ public class CollectorRobot {
 		}
 		route.value.removeAll(toRemove);
 
-		if (goal == null || position.euclidDistanceTo(goal.value) < REACHED_POSITION_THRESHOLD_M) {
+		if (goal.value == null || position.euclidDistanceTo(goal.value) < REACHED_POSITION_THRESHOLD_M) {
 			// Try to set new goal
 			if (route.value.isEmpty()) {
 				System.out.format("%d: Id: %s, No more waypoints to reach%n", clock.getCurrentMilliseconds(), id);

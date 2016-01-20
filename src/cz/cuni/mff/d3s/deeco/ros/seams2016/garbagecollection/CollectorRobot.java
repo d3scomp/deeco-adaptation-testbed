@@ -110,22 +110,12 @@ public class CollectorRobot {
 	@Process
 	@PeriodicScheduling(period = 1000)
 	public static void reportStatus(@In("id") String id, @In("position") Position position,
-			@In("clock") CurrentTimeProvider clock,
-			/*
-			 * @In("goalPosition") Position goalPosition,
-			 * 
-			 * @In("goalExchangePosition") Position goalExchangePosition, @In("goalReached") Boolean goalReached,
-			 * 
-			 * @In("goalSet") Boolean goalSet,
-			 */ @In("route") List<Position> route, @In("state") State state) {
+			@In("clock") CurrentTimeProvider clock, @In("goal") Position goal, @In("curGoal") Position curGoal,
+			@In("route") List<Position> route, @In("state") State state) {
 		System.out.format("%d: id: %s", clock.getCurrentMilliseconds(), id);
 		System.out.format(", pos: %s, state: %s", position.toString(), state);
-		/*
-		 * System.out.format(", goal: (pos: %s, dist: %f, reached: %s, set: %s, exchange: %s) remaining:%d%n",
-		 * goalPosition.toString(), goalPosition.euclidDistanceTo(position), String.valueOf(goalReached),
-		 * String.valueOf(goalSet), goalExchangePosition != null ? goalExchangePosition.toString() : "none",
-		 * route.size());
-		 */
+		System.out.format(", goal: (pos: %s, dist: %f, set: %s) remaining:%d%n",
+		goal.toString(), goal.euclidDistanceTo(position), curGoal, route.size());
 	}
 
 	@Process
@@ -197,11 +187,12 @@ public class CollectorRobot {
 			System.out.format("%d: Id: %s, No goal to set%n", clock.getCurrentMilliseconds(), id);
 			return;
 		}
-
+		
 		// Set goal if not yet set
 		if (curGoal.value == null || goal.euclidDistanceTo(curGoal.value) > SAME_POSITION_THRESHOLD
 				|| positioning.getMoveBaseResult() == null) {
 			System.out.format("%d: Id: %s, Setting goal%n", clock.getCurrentMilliseconds(), id);
+			System.err.println("Goal: " + goal);
 			positioning.setSimpleGoal(ROSPosition.fromPosition(goal), new Orientation(0, 0, 0, 1));
 			curGoal.value = goal;
 		}
@@ -240,7 +231,7 @@ public class CollectorRobot {
 				&& oldPosition.value.euclidDistanceTo(position) < SAME_POSITION_THRESHOLD;
 		boolean wantMove = position.euclidDistanceTo(goal) > REACHED_POSITION_THRESHOLD_M;
 		if(goal == null) {
-			System.err.println("goal == nul;l;");
+			System.err.println("goal == null;");
 			return;
 		}
 		System.err.println("wantMove: " + wantMove + " noMove: " + noMove + " dist: " + position.euclidDistanceTo(goal));

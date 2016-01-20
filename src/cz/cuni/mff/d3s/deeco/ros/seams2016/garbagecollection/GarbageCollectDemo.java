@@ -13,7 +13,6 @@ import cz.cuni.mff.d3s.jdeeco.network.l2.strategy.KnowledgeInsertingStrategy;
 import cz.cuni.mff.d3s.jdeeco.position.Position;
 import cz.cuni.mff.d3s.jdeeco.position.PositionPlugin;
 import cz.cuni.mff.d3s.jdeeco.publishing.DefaultKnowledgePublisher;
-import cz.cuni.mff.d3s.jdeeco.ros.BeeClick;
 import cz.cuni.mff.d3s.jdeeco.ros.Positioning;
 import cz.cuni.mff.d3s.jdeeco.ros.sim.ROSSimulation;
 
@@ -86,12 +85,12 @@ public class GarbageCollectDemo {
 			
 			Positioning positioning = new Positioning();
 			DEECoNode robot = realm.createNode(i, positioning, rosSim.createROSServices(colors[i]), positionPlugins[i]);
-			robot.deployComponent(new CollectorRobot(name, positioning, rosSim.getTimer(), garbage, monitor));
+			robot.deployComponent(new CollectorRobot(name, positioning, rosSim.getTimer(), garbage, monitor, generator));
 			robot.deployEnsemble(BlockedGoalSwapEnsemble.class);
 		}
 		
 		// Simulate for specified time
-		realm.start(240_000);
+		realm.start(300_000);
 		
 		monitor.printStatus();
 		

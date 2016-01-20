@@ -35,7 +35,8 @@ public class GarbageCollectDemo {
 	};
 	private static PositionPlugin[] positionPlugins = {
 			new PositionPlugin(12, 5),
-			new PositionPlugin(17.50, 5),
+			//new PositionPlugin(17.50, 5),
+			new PositionPlugin(12, 13),
 			
 			new PositionPlugin(12, 13),
 			new PositionPlugin(26, 11),
@@ -44,7 +45,7 @@ public class GarbageCollectDemo {
 			new PositionPlugin(11, 13),
 			new PositionPlugin(10, 13),
 			new PositionPlugin(9, 13),
-	};	
+	};
 	private static PositionGenerator generator = new PositionGenerator(
 			new Random(42),
 /*			new Area(00.05, 01.05, 11.1, 13.10), // Kitchen*/

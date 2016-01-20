@@ -6,6 +6,7 @@ import cz.cuni.mff.d3s.deeco.annotations.Component;
 import cz.cuni.mff.d3s.deeco.annotations.In;
 import cz.cuni.mff.d3s.deeco.annotations.InOut;
 import cz.cuni.mff.d3s.deeco.annotations.Local;
+import cz.cuni.mff.d3s.deeco.annotations.Out;
 import cz.cuni.mff.d3s.deeco.annotations.PeriodicScheduling;
 import cz.cuni.mff.d3s.deeco.annotations.Process;
 import cz.cuni.mff.d3s.deeco.task.ParamHolder;
@@ -18,15 +19,18 @@ import cz.cuni.mff.d3s.jdeeco.ros.datatypes.ROSPosition;
 
 @Component
 public class CollectorRobot {
+	public static double SAME_POSITION_THRESHOLD = 0.01;
+	
 	enum State {
 		Free, Blocked
 	}
 
-	public Position goalPosition;
-	public Position goalExchangePosition;
-	public Boolean goalReached;
-	public Boolean goalSet;
-
+	public Position goal;
+	public Position exchangeGoal;
+	
+	@Local
+	public Position curGoal;
+	
 	/**
 	 * Id of the vehicle component.
 	 */
@@ -35,6 +39,9 @@ public class CollectorRobot {
 	public Position position;
 
 	public State state;
+
+	@Local
+	public Long blockedCounter;
 
 	@Local
 	public List<Position> route;
@@ -55,28 +62,30 @@ public class CollectorRobot {
 		this.position = new Position(0, 0, 0);
 		this.clock = clock;
 		this.monitor = monitor;
-		
+
 		state = State.Free;
 
 		// Set waypoints and initial goal
 		route = garbage;
-		goalPosition = route.get(0);
-		goalExchangePosition = null;
-		goalReached = false;
-		goalSet = false;
+		goal = route.get(0);
+		exchangeGoal = null;
+		
+		blockedCounter = 0l;
 	}
 
 	@Process
 	@PeriodicScheduling(period = 100)
-	public static void sense(@InOut("position") ParamHolder<Position> position,
+	public static void sense(@Out("position") ParamHolder<Position> position,
 			@In("positioning") Positioning positioning) {
 		PoseWithCovariance pos = positioning.getPoseWithCovariance();
 		if (pos != null) {
 			position.value = new Position(pos.position.x, pos.position.y, pos.position.z);
+		} else {
+			position.value = new Position(0, 0, 0);
 		}
 	}
 
-	@Process
+/*	@Process
 	@PeriodicScheduling(period = 1000)
 	public static void reportStatus(@In("id") String id, @In("position") Position position,
 			@In("clock") CurrentTimeProvider clock, @In("goalPosition") Position goalPosition,
@@ -86,29 +95,52 @@ public class CollectorRobot {
 		System.out.format(", pos: %s, state: %s", position.toString(), state);
 		System.out.format(", goal: (pos: %s, dist: %f, reached: %s, set: %s, exchange: %s) remaining:%d%n",
 				goalPosition.toString(), goalPosition.euclidDistanceTo(position), String.valueOf(goalReached),
-				String.valueOf(goalSet), goalExchangePosition != null?goalExchangePosition.toString():"none", route.size());
-	}
+				String.valueOf(goalSet), goalExchangePosition != null ? goalExchangePosition.toString() : "none",
+				route.size());
+	}*/
+/*
+	@Process
+	@PeriodicScheduling(period = 1000)
+	public static void autoUnblock(@In("id") String id, @In("clock") CurrentTimeProvider clock,
+			@InOut("blockedCounter") ParamHolder<Long> blockedCounter, @InOut("state") ParamHolder<State> state,
+			@InOut("goalSet") ParamHolder<Boolean> goalSet, @In("goalPosition") Position goalPosition,
+			@In("positioning") Positioning positioning) {
+		if (state.value == State.Blocked) {
+			blockedCounter.value++;
+		} else {
+			blockedCounter.value = 0l;
+		}
+
+		if (blockedCounter.value > 15) {
+			System.out.println(">>>>>>> Auto unblocking: " + id + "<<<<<<");
+			state.value = State.Free;
+
+			System.out.format("%d: Id: %s, Setting goal%n", clock.getCurrentMilliseconds(), id);
+			positioning.setSimpleGoal(ROSPosition.fromPosition(goalPosition), new Orientation(0, 0, 0, 1));
+			goalSet.value = true;
+		}
+	}*/
 
 	@Process
 	@PeriodicScheduling(period = 500)
-	public static void setGoal(@In("id") String id, @InOut("route") ParamHolder<List<Position>> route,
-			@InOut("goalPosition") ParamHolder<Position> goalPosition,
-			@InOut("goalReached") ParamHolder<Boolean> goalReached, @InOut("goalSet") ParamHolder<Boolean> goalSet,
+	public static void setGoal(@In("id") String id, @In("position") Position position, @InOut("route") ParamHolder<List<Position>> route,
+			@InOut("goal") ParamHolder<Position> goal,
 			@In("clock") CurrentTimeProvider clock, @In("monitor") PositionMonitor monitor) {
-		if (goalReached.value) {
+		if (goal != null && position.euclidDistanceTo(goal.value) < 1) {
 			// Report to monitor
-			monitor.reportReached(goalPosition.value, id);
+			monitor.reportReached(goal.value, id);
 
 			// Remove reached waypoint
-			route.value.remove(goalPosition.value);
-
+			route.value.remove(goal.value);
+		}
+		
+		if (goal == null || position.euclidDistanceTo(goal.value) < 1) {
 			// Try to set new goal
 			if (route.value.isEmpty()) {
 				System.out.format("%d: Id: %s, No more waypoints to reach%n", clock.getCurrentMilliseconds(), id);
+				goal.value = null;
 			} else {
-				goalPosition.value = route.value.get(0);
-				goalReached.value = false;
-				goalSet.value = false;
+				goal.value = route.value.get(0);
 			}
 		}
 	}
@@ -116,33 +148,28 @@ public class CollectorRobot {
 	@Process
 	@PeriodicScheduling(period = 2000)
 	public static void driveRobot(@In("id") String id, @In("position") Position position,
-			@In("positioning") Positioning positioning, @InOut("goalPosition") ParamHolder<Position> goalPosition,
-			@InOut("goalReached") ParamHolder<Boolean> goalReached, @InOut("goalSet") ParamHolder<Boolean> goalSet,
+			@In("positioning") Positioning positioning, @In("goal") Position goal, @InOut("curGoal") ParamHolder<Position> curGoal,
 			@In("clock") CurrentTimeProvider clock, @InOut("state") ParamHolder<State> state) throws Exception {
+		if(goal == null) {
+			System.out.format("%d: Id: %s, No goal to set%n", clock.getCurrentMilliseconds(), id);
+			return;
+		}
+		
 		// Set goal if not yet set
-		if (!goalSet.value || positioning.getMoveBaseResult() == null) {
+		if (curGoal.value == null || goal.euclidDistanceTo(curGoal.value) < SAME_POSITION_THRESHOLD || positioning.getMoveBaseResult() == null) {
 			System.out.format("%d: Id: %s, Setting goal%n", clock.getCurrentMilliseconds(), id);
-			positioning.setSimpleGoal(ROSPosition.fromPosition(goalPosition.value), new Orientation(0, 0, 0, 1));
-			goalSet.value = true;
+			positioning.setSimpleGoal(ROSPosition.fromPosition(goal), new Orientation(0, 0, 0, 1));
+			curGoal.value = goal;
 		}
 
 		// Process move result
-		if (positioning.getMoveBaseResult() != null && !goalReached.value) {
+		if (positioning.getMoveBaseResult() != null && goal.euclidDistanceTo(position) < SAME_POSITION_THRESHOLD) {
 			switch (positioning.getMoveBaseResult().status) {
 			case Succeeded:
-				goalReached.value = true;
-				System.out.format("%d: Id: %s, at: %s reached %s%n", clock.getCurrentMilliseconds(), id, position,
-						goalPosition.value);
-				/*
-				 * positioning.setSimpleGoal(ROSPosition.fromPosition(goal.value.position), new Orientation(0, 0, 0,
-				 * 1)); goal.value.set = true;
-				 */
+				System.out.format("%d: Id: %s, at: %s reached %s%n", clock.getCurrentMilliseconds(), id, position, goal);
 				break;
 			case Rejected:
-				System.out.format("%d: Id: %s, at: %s rejected goal %s%n", clock.getCurrentMilliseconds(), id, position,
-						goalPosition.value);
-				// positioning.setSimpleGoal(ROSPosition.fromPosition(goal.value.position), new Orientation(0, 0, 0,
-				// 1));
+				System.out.format("%d: Id: %s, at: %s rejected goal %s%n", clock.getCurrentMilliseconds(), id, position, goal);
 				state.value = State.Blocked;
 				break;
 			case Canceled:

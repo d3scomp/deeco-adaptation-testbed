@@ -14,7 +14,6 @@ import cz.cuni.mff.d3s.jdeeco.position.Position;
 @PeriodicScheduling(period = 3000)
 public class BlockedGoalSwapEnsemble {
 	private static int MAX_DISTANCE_M = 5;
-	private static double SAME_GOAL_THRESHOLD_DISTANCE = 0.01;
 
 	@Membership
 	public static boolean membership(@In("coord.id") String coordId, @In("coord.position") Position coordPosition,
@@ -36,11 +35,12 @@ public class BlockedGoalSwapEnsemble {
 			@InOut("member.goalSet") ParamHolder<Boolean> memberGoalSet,
 			@InOut("member.state") ParamHolder<State> memberState) {
 		System.out.println(BlockedGoalSwapEnsemble.class.getSimpleName() + " EXCHANGE");
-		System.out.println("memberGoal: " + memberGoalPosition.value + " coordGoal: " + coordGoalPosition + " coordExcnage:"
-				+ coordGoalExchangePosition + " memberExchange:" + memberGoalExchangePosition.value);
+		System.out.println("memberGoal: " + memberGoalPosition.value + " coordGoal: " + coordGoalPosition
+				+ " coordExcnage:" + coordGoalExchangePosition + " memberExchange:" + memberGoalExchangePosition.value);
 
 		// Stage 2, coordinator is willing to adopt our goal
-		if (coordGoalExchangePosition != null && memberGoalPosition != null && coordGoalExchangePosition.euclidDistanceTo(memberGoalPosition.value) < SAME_GOAL_THRESHOLD_DISTANCE) {
+		if (coordGoalExchangePosition != null && memberGoalPosition != null && coordGoalExchangePosition
+				.euclidDistanceTo(memberGoalPosition.value) < CollectorRobot.SAME_POSITION_THRESHOLD) {
 			System.out.println("Goal exchange stage 2");
 			// Set coord's goal as member's target
 			memberGoalExchangePosition.value = null;

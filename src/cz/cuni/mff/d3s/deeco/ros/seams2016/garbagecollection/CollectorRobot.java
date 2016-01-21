@@ -227,16 +227,16 @@ public class CollectorRobot {
 			@InOut("oldPosition") ParamHolder<Position> oldPosition,
 			@InOut("noPosChangeCounter") ParamHolder<Long> noPosChangeCounter, @InOut("state") ParamHolder<State> state,
 			@In("goal") Position goal) {
+		// If we have nothing to do just return
+		if(goal == null) {
+			return;
+		}
 		// Increment no change counter
 		boolean noMove = oldPosition.value != null
 				&& oldPosition.value.euclidDistanceTo(position) < SAME_POSITION_THRESHOLD;
 		boolean wantMove = position.euclidDistanceTo(goal) > REACHED_POSITION_THRESHOLD_M;
-		if(goal == null) {
-			System.err.println("goal == null;");
-			return;
-		}
 		System.err.println("wantMove: " + wantMove + " noMove: " + noMove + " dist: " + position.euclidDistanceTo(goal));
-				if (wantMove && noMove) {
+		if (wantMove && noMove) {
 			noPosChangeCounter.value++;
 		} else {
 			noPosChangeCounter.value = 0l;

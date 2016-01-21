@@ -21,8 +21,8 @@ import cz.cuni.mff.d3s.jdeeco.ros.datatypes.ROSPosition;
 
 @Component
 public class CollectorRobot {
-	public static double REACHED_POSITION_THRESHOLD_M = 0.5;
-	public static double SAME_POSITION_THRESHOLD = 0.01;
+	public static double REACHED_POS_THRESH_M = 0.5;
+	public static double SAME_POS_THRESH_M = 0.01;
 	static final Random random = new Random(42);
 
 	enum State {
@@ -34,7 +34,7 @@ public class CollectorRobot {
 	}
 
 	static final int BLOCKED_AUTORECOVERY_THRESHOLD_S = 5;
-	static final long NO_POS_CHANGE_BLOCKED_THRESHOLD = 5;
+	static final long NOCHANGE_POS_THRESH_CNT = 5;
 
 	public Position goal;
 	public Position exchangeGoal;
@@ -114,8 +114,8 @@ public class CollectorRobot {
 			@In("route") List<Position> route, @In("state") State state) {
 		System.out.format("%d: id: %s", clock.getCurrentMilliseconds(), id);
 		System.out.format(", pos: %s, state: %s", position.toString(), state);
-		System.out.format(", goal: (pos: %s, dist: %f, set: %s) remaining:%d%n",
-		goal!=null?goal:"none", goal!=null?goal.euclidDistanceTo(position):-1.0, curGoal, route.size());
+		System.out.format(", goal: (pos: %s, dist: %f, set: %s) remaining:%d%n", goal != null ? goal : "none",
+				goal != null ? goal.euclidDistanceTo(position) : -1.0, curGoal, route.size());
 	}
 
 	@Process
@@ -159,14 +159,14 @@ public class CollectorRobot {
 		// Report and remove reached position
 		List<Position> toRemove = new LinkedList<>();
 		for (Position pos : route.value) {
-			if (position.euclidDistanceTo(pos) < REACHED_POSITION_THRESHOLD_M) {
+			if (position.euclidDistanceTo(pos) < REACHED_POS_THRESH_M) {
 				monitor.reportReached(pos, id);
 				toRemove.add(pos);
 			}
 		}
 		route.value.removeAll(toRemove);
 
-		if (goal.value == null || position.euclidDistanceTo(goal.value) < REACHED_POSITION_THRESHOLD_M) {
+		if (goal.value == null || position.euclidDistanceTo(goal.value) < REACHED_POS_THRESH_M) {
 			// Try to set new goal
 			if (route.value.isEmpty()) {
 				System.out.format("%d: Id: %s, No more waypoints to reach%n", clock.getCurrentMilliseconds(), id);
@@ -180,7 +180,7 @@ public class CollectorRobot {
 
 	@Process
 	@PeriodicScheduling(period = 2000)
-	public static void driveRobot(@In("id") String id, @In("position") Position position,
+	public static void driveRobot(@In("id") String id, @In("position") Position pos,
 			@In("positioning") Positioning positioning, @In("goal") Position goal,
 			@InOut("curGoal") ParamHolder<Position> curGoal, @In("clock") CurrentTimeProvider clock,
 			@InOut("state") ParamHolder<State> state) throws Exception {
@@ -188,9 +188,9 @@ public class CollectorRobot {
 			System.out.format("%d: Id: %s, No goal to set%n", clock.getCurrentMilliseconds(), id);
 			return;
 		}
-		
+
 		// Set goal if not yet set
-		if (curGoal.value == null || goal.euclidDistanceTo(curGoal.value) > SAME_POSITION_THRESHOLD
+		if (curGoal.value == null || goal.euclidDistanceTo(curGoal.value) > SAME_POS_THRESH_M
 				|| positioning.getMoveBaseResult() == null) {
 			System.out.format("%d: Id: %s, Setting goal%n", clock.getCurrentMilliseconds(), id);
 			System.err.println("Goal: " + goal);
@@ -199,20 +199,16 @@ public class CollectorRobot {
 		}
 
 		// Process move result
-		if (positioning.getMoveBaseResult() != null && goal.euclidDistanceTo(position) < SAME_POSITION_THRESHOLD) {
+		if (positioning.getMoveBaseResult() != null && goal.euclidDistanceTo(pos) < SAME_POS_THRESH_M) {
 			switch (positioning.getMoveBaseResult().status) {
 			case Succeeded:
-				System.out.format("%d: Id: %s, at: %s reached %s%n", clock.getCurrentMilliseconds(), id, position,
-						goal);
+				System.out.format("%d: Id: %s, Goal reached: %s%n", clock.getCurrentMilliseconds(), id, goal);
 				break;
 			case Rejected:
-				System.out.format("%d: Id: %s, at: %s rejected goal %s%n", clock.getCurrentMilliseconds(), id, position,
-						goal);
-				state.value = State.Blocked;
+				System.out.format("%d: Id: %s, Goal rejected: %s%n", clock.getCurrentMilliseconds(), id, goal);
 				break;
 			case Canceled:
-				System.out.format("%d: Id: %s, Goal canceled: %s%n", clock.getCurrentMilliseconds(), id,
-						positioning.getMoveBaseResult().toString());
+				System.out.format("%d: Id: %s, Goal canceled: %s%n", clock.getCurrentMilliseconds(), id, goal);
 				break;
 			default:
 				System.out.format("%d: Id: %s, unknown result: %s%n", clock.getCurrentMilliseconds(), id,
@@ -223,28 +219,26 @@ public class CollectorRobot {
 
 	@Process
 	@PeriodicScheduling(period = 1000)
-	public static void driveRobot(@In("id") String id, @In("position") Position position,
-			@InOut("oldPosition") ParamHolder<Position> oldPosition,
+	public static void driveRobot(@In("id") String id, @In("position") Position pos,
+			@InOut("oldPosition") ParamHolder<Position> oldPos,
 			@InOut("noPosChangeCounter") ParamHolder<Long> noPosChangeCounter, @InOut("state") ParamHolder<State> state,
 			@In("goal") Position goal) {
 		// If we have nothing to do just return
-		if(goal == null) {
+		if (goal == null) {
 			return;
 		}
 		// Increment no change counter
-		boolean noMove = oldPosition.value != null
-				&& oldPosition.value.euclidDistanceTo(position) < SAME_POSITION_THRESHOLD;
-		boolean wantMove = position.euclidDistanceTo(goal) > REACHED_POSITION_THRESHOLD_M;
-		System.err.println("wantMove: " + wantMove + " noMove: " + noMove + " dist: " + position.euclidDistanceTo(goal));
+		boolean noMove = oldPos.value != null && oldPos.value.euclidDistanceTo(pos) < SAME_POS_THRESH_M;
+		boolean wantMove = pos.euclidDistanceTo(goal) > REACHED_POS_THRESH_M;
 		if (wantMove && noMove) {
 			noPosChangeCounter.value++;
 		} else {
 			noPosChangeCounter.value = 0l;
 		}
-		oldPosition.value = position;
+		oldPos.value = pos;
 
 		// Adjust blocked
-		if (noPosChangeCounter.value > NO_POS_CHANGE_BLOCKED_THRESHOLD) {
+		if (noPosChangeCounter.value > NOCHANGE_POS_THRESH_CNT) {
 			state.value = State.Blocked;
 		} else {
 			state.value = State.Free;

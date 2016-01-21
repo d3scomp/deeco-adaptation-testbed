@@ -40,7 +40,7 @@ public class BlockedGoalSwapEnsemble {
 
 		// Stage 2, coordinator is willing to adopt our goal
 		if (coordGoalExchangePosition != null && memberGoalPosition != null && coordGoalExchangePosition
-				.euclidDistanceTo(memberGoalPosition.value) < CollectorRobot.SAME_POSITION_THRESHOLD) {
+				.euclidDistanceTo(memberGoalPosition.value) < CollectorRobot.SAME_POS_THRESH_M) {
 			System.out.println("Goal exchange stage 2");
 			// Set coord's goal as member's target
 			memberGoalExchangePosition.value = null;

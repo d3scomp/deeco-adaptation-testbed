@@ -33,7 +33,7 @@ public class CollectorRobot {
 		GoalChange, RandomGoal
 	}
 
-	static final int BLOCKED_AUTORECOVERY_THRESHOLD_S = 5;
+	static final int BLOCKED_AUTORECOVERY_THRESHOLD_S = 6;
 	static final long NOCHANGE_POS_THRESH_CNT = 5;
 
 	public Position goal;
@@ -59,6 +59,9 @@ public class CollectorRobot {
 
 	@Local
 	public Long blockedCounter;
+	
+	@Local
+	public Long swapRateLimiter;
 
 	@Local
 	public List<Position> route;
@@ -193,7 +196,6 @@ public class CollectorRobot {
 		if (curGoal.value == null || goal.euclidDistanceTo(curGoal.value) > SAME_POS_THRESH_M
 				|| positioning.getMoveBaseResult() == null) {
 			System.out.format("%d: Id: %s, Setting goal%n", clock.getCurrentMilliseconds(), id);
-			System.err.println("Goal: " + goal);
 			positioning.setSimpleGoal(ROSPosition.fromPosition(goal), new Orientation(0, 0, 0, 1));
 			curGoal.value = goal;
 		}

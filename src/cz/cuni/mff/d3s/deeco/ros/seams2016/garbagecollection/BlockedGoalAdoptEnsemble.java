@@ -1,6 +1,7 @@
 package cz.cuni.mff.d3s.deeco.ros.seams2016.garbagecollection;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import cz.cuni.mff.d3s.deeco.annotations.Ensemble;
 import cz.cuni.mff.d3s.deeco.annotations.In;
@@ -35,11 +36,13 @@ public class BlockedGoalAdoptEnsemble {
 	}
 
 	@KnowledgeExchange
-	public static void exchange(@In("member.clock") CurrentTimeProvider clock, @In("coord.id") String coordId, @In("member.id") String memberId,
-			@In("coord.goal") Position coordGoal, @InOut("member.goal") ParamHolder<Position> memberGoal,
+	public static void exchange(@In("member.clock") CurrentTimeProvider clock, @In("coord.id") String coordId,
+			@In("member.id") String memberId, @In("coord.goal") Position coordGoal,
+			@InOut("member.goal") ParamHolder<Position> memberGoal,
 			@InOut("member.blockedCounter") ParamHolder<Long> memberBlockedCounter,
 			@InOut("member.lastAdoption") ParamHolder<Long> lastAdoption,
-			@InOut("member.adoptedGoals") ParamHolder<ArrayList<Position>> memberAdopedGoals) {
+			@InOut("member.adoptedGoals") ParamHolder<ArrayList<Position>> memberAdopedGoals,
+			@InOut("member.route") ParamHolder<List<Position>> memberRoute) {
 		System.err.println(BlockedGoalAdoptEnsemble.class.getSimpleName() + " EXCHANGE");
 		System.err.println("memberGoal: " + memberGoal.value + " coordGoal: " + coordGoal);
 		// Check if the member is blocked for long enough
@@ -49,8 +52,10 @@ public class BlockedGoalAdoptEnsemble {
 		}
 
 		// Limit adoption rate
-		if (lastAdoption.value != null && (clock.getCurrentMilliseconds() - lastAdoption.value) < REMOTE_RECOVERY_BACKOFF_MS) {
-			System.err.println(memberId + " Adopt rate limiter prevents adoption: " + (clock.getCurrentMilliseconds() - lastAdoption.value) + " ms ago");
+		if (lastAdoption.value != null
+				&& (clock.getCurrentMilliseconds() - lastAdoption.value) < REMOTE_RECOVERY_BACKOFF_MS) {
+			System.err.println(memberId + " Adopt rate limiter prevents adoption: "
+					+ (clock.getCurrentMilliseconds() - lastAdoption.value) + " ms ago");
 			return;
 		}
 
@@ -58,6 +63,7 @@ public class BlockedGoalAdoptEnsemble {
 		System.err.println(memberId + " adopting " + coordGoal + " from " + coordId);
 		memberAdopedGoals.value.add(coordGoal);
 		memberGoal.value = coordGoal;
+		memberRoute.value.add(coordGoal);
 
 		// Reset counters
 		memberBlockedCounter.value = 0l;

@@ -1,7 +1,6 @@
 package cz.cuni.mff.d3s.deeco.ros.seams2016.garbagecollection;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
 import cz.cuni.mff.d3s.deeco.annotations.Ensemble;
 import cz.cuni.mff.d3s.deeco.annotations.In;

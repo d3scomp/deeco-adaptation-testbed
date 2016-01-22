@@ -84,8 +84,8 @@ public class GarbageCollectDemo {
 			Positioning positioning = new Positioning();
 			DEECoNode robot = realm.createNode(i, positioning, rosSim.createROSServices(colors[i]), positionPlugins[i]);
 			robot.deployComponent(new CollectorRobot(name, positioning, rosSim.getTimer(), garbage, monitor, generator));
-	//		robot.deployEnsemble(BlockedGoalSwapEnsemble.class);
 			robot.deployEnsemble(BlockedGoalAdoptEnsemble.class);
+			robot.deployEnsemble(AdoptedGoalRemoveEnsemble.class);
 		}
 		
 		// Simulate for specified time

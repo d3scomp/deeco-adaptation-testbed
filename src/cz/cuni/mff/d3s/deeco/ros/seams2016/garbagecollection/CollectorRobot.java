@@ -66,7 +66,6 @@ public class CollectorRobot {
 	@Local
 	public Long noPosChangeCounter;
 
-	@Local
 	public List<Position> route;
 
 	@Local

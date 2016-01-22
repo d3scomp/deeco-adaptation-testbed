@@ -8,11 +8,11 @@ import cz.cuni.mff.d3s.deeco.ros.seams2016.garbagecollection.PositionGenerator.A
 import cz.cuni.mff.d3s.deeco.runners.DEECoSimulation;
 import cz.cuni.mff.d3s.deeco.runtime.DEECoNode;
 import cz.cuni.mff.d3s.jdeeco.network.Network;
-import cz.cuni.mff.d3s.jdeeco.network.device.SimpleBroadcastDevice;
 import cz.cuni.mff.d3s.jdeeco.network.l2.strategy.KnowledgeInsertingStrategy;
 import cz.cuni.mff.d3s.jdeeco.position.Position;
 import cz.cuni.mff.d3s.jdeeco.position.PositionPlugin;
 import cz.cuni.mff.d3s.jdeeco.publishing.DefaultKnowledgePublisher;
+import cz.cuni.mff.d3s.jdeeco.ros.BeeClick;
 import cz.cuni.mff.d3s.jdeeco.ros.Positioning;
 import cz.cuni.mff.d3s.jdeeco.ros.sim.ROSSimulation;
 
@@ -45,13 +45,12 @@ public class GarbageCollectDemo {
 	};
 	private static PositionGenerator generator = new PositionGenerator(
 			new Random(42),
-			new Area(00.05, 01.05, 11.1, 13.10), // Kitchen*/
-			new Area(11.50, 13.50, 1.00, 8.00), // Office1
-			new Area(16.50, 18.25, 1.00, 8.00), // Office2
-			new Area(02.25, 04.75, 10.50, 13.75), // Corridor left
-			new Area(06.25, 14.25, 10.50, 13.75), // Corridor center left
-			new Area(15.75, 23.75, 10.50, 13.75), // Corridor center right
-			new Area(25.25, 28.75, 10.50, 13.75) // Corridor right);
+			new Area(11.50, 13.50, 1.00, 7.00), // Office1
+			new Area(16.50, 18.25, 1.00, 7.00), // Office2
+			new Area(02.25, 04.75, 11.10, 13.75), // Corridor left
+			new Area(06.25, 14.25, 11.10, 13.75), // Corridor center left
+			new Area(15.75, 23.75, 11.10, 13.75), // Corridor center right
+			new Area(25.25, 28.75, 11.10, 13.75) // Corridor right
 	);
 		
 	public static void main(String[] args) throws Exception {
@@ -65,12 +64,12 @@ public class GarbageCollectDemo {
 		realm.addPlugin(Network.class);
 		realm.addPlugin(DefaultKnowledgePublisher.class);
 		realm.addPlugin(KnowledgeInsertingStrategy.class);
-	//	realm.addPlugin(BeeClick.class); // Network device simulation using OMNeT++ and INET
-		realm.addPlugin(new SimpleBroadcastDevice()); // Simple fake network device (simulate range and delivery latency)
+		realm.addPlugin(BeeClick.class); // Network device simulation using OMNeT++ and INET
+	//	realm.addPlugin(new SimpleBroadcastDevice()); // Simple fake network device (simulate range and delivery latency)
 		
 		
 		PositionMonitor monitor = new PositionMonitor(rosSim.getTimer());
-				
+						
 		// Add robots
 		for(int i = 0; i < ROBOTS; ++i) {
 			final String name = "Collector" + i; 

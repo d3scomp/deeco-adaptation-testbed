@@ -8,11 +8,11 @@ import cz.cuni.mff.d3s.deeco.ros.seams2016.garbagecollection.PositionGenerator.A
 import cz.cuni.mff.d3s.deeco.runners.DEECoSimulation;
 import cz.cuni.mff.d3s.deeco.runtime.DEECoNode;
 import cz.cuni.mff.d3s.jdeeco.network.Network;
+import cz.cuni.mff.d3s.jdeeco.network.device.SimpleBroadcastDevice;
 import cz.cuni.mff.d3s.jdeeco.network.l2.strategy.KnowledgeInsertingStrategy;
 import cz.cuni.mff.d3s.jdeeco.position.Position;
 import cz.cuni.mff.d3s.jdeeco.position.PositionPlugin;
 import cz.cuni.mff.d3s.jdeeco.publishing.DefaultKnowledgePublisher;
-import cz.cuni.mff.d3s.jdeeco.ros.BeeClick;
 import cz.cuni.mff.d3s.jdeeco.ros.Positioning;
 import cz.cuni.mff.d3s.jdeeco.ros.sim.ROSSimulation;
 
@@ -65,8 +65,8 @@ public class GarbageCollectDemo {
 		realm.addPlugin(Network.class);
 		realm.addPlugin(DefaultKnowledgePublisher.class);
 		realm.addPlugin(KnowledgeInsertingStrategy.class);
-		realm.addPlugin(BeeClick.class); // Network device simulation using OMNeT++ and INET
-		//realm.addPlugin(new SimpleBroadcastDevice()); // Simple fake network device (simulate range and delivery latency)
+	//	realm.addPlugin(BeeClick.class); // Network device simulation using OMNeT++ and INET
+		realm.addPlugin(new SimpleBroadcastDevice()); // Simple fake network device (simulate range and delivery latency)
 		
 		
 		PositionMonitor monitor = new PositionMonitor(rosSim.getTimer());
@@ -84,7 +84,8 @@ public class GarbageCollectDemo {
 			Positioning positioning = new Positioning();
 			DEECoNode robot = realm.createNode(i, positioning, rosSim.createROSServices(colors[i]), positionPlugins[i]);
 			robot.deployComponent(new CollectorRobot(name, positioning, rosSim.getTimer(), garbage, monitor, generator));
-			robot.deployEnsemble(BlockedGoalSwapEnsemble.class);
+	//		robot.deployEnsemble(BlockedGoalSwapEnsemble.class);
+			robot.deployEnsemble(BlockedGoalAdoptEnsemble.class);
 		}
 		
 		// Simulate for specified time

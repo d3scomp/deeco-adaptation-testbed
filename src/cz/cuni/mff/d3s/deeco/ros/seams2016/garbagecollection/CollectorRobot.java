@@ -1,5 +1,7 @@
 package cz.cuni.mff.d3s.deeco.ros.seams2016.garbagecollection;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -34,10 +36,17 @@ public class CollectorRobot {
 	}
 
 	static final int BLOCKED_AUTORECOVERY_THRESHOLD_S = 6;
-	static final long NOCHANGE_POS_THRESH_CNT = 5;
+	static final long NOCHANGE_POS_THRESH_CNT = 3;
 
 	public Position goal;
 	public Position exchangeGoal;
+	
+	public Long blockedCounter;
+	
+	public Long lastAdoption;
+	
+	public Collection<Position> adoptedGoals;
+
 
 	@Local
 	public Position curGoal;
@@ -56,12 +65,6 @@ public class CollectorRobot {
 
 	@Local
 	public Long noPosChangeCounter;
-
-	@Local
-	public Long blockedCounter;
-	
-	@Local
-	public Long swapRateLimiter;
 
 	@Local
 	public List<Position> route;
@@ -87,6 +90,7 @@ public class CollectorRobot {
 		this.monitor = monitor;
 		this.positionGenerator = generator;
 		this.noPosChangeCounter = 0l;
+		this.adoptedGoals = new ArrayList<>();
 
 		state = State.Free;
 

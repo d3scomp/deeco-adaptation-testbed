@@ -26,7 +26,7 @@ public class BlockedGoalAdoptEnsemble {
 			@In("member.id") String memberId, @In("member.position") Position memberPosition,
 			@In("coord.state") State coordState, @In("member.state") State memberState) {
 		System.out
-				.println(BlockedGoalSwapEnsemble.class.getSimpleName() + " MEMBERSHIP:" + coordId + " -> " + memberId);
+				.println(BlockedGoalAdoptEnsemble.class.getSimpleName() + " MEMBERSHIP:" + coordId + " -> " + memberId);
 		System.out.println("coordState:" + coordState + " memberState: " + memberState + " coordId: " + coordId
 				+ " memberId: " + memberId + " dist: " + memberPosition.euclidDistanceTo(coordPosition));
 		boolean ret = coordState == State.Blocked && memberState == State.Blocked && !coordId.equals(memberId)

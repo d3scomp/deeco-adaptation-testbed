@@ -39,10 +39,11 @@ public class CollectorRobot {
 	static final long NOCHANGE_POS_THRESH_CNT = 3;
 
 	public Position goal;
-	public Position exchangeGoal;
 	
+	@Local
 	public Long blockedCounter;
 	
+	@Local
 	public Long lastAdoption;
 	
 	public Collection<Position> adoptedGoals;
@@ -66,6 +67,7 @@ public class CollectorRobot {
 	@Local
 	public Long noPosChangeCounter;
 
+	@Local
 	public List<Position> route;
 
 	@Local
@@ -96,7 +98,6 @@ public class CollectorRobot {
 		// Set waypoints and initial goal
 		route = garbage;
 		goal = route.get(0);
-		exchangeGoal = null;
 
 		blockedCounter = 0l;
 	}
@@ -189,7 +190,7 @@ public class CollectorRobot {
 	public static void driveRobot(@In("id") String id, @In("position") Position pos,
 			@In("positioning") Positioning positioning, @In("goal") Position goal,
 			@InOut("curGoal") ParamHolder<Position> curGoal, @In("clock") CurrentTimeProvider clock,
-			@InOut("state") ParamHolder<State> state) throws Exception {
+			@InOut("state") ParamHolder<State> state, @In("monitor") PositionMonitor monitor) throws Exception {
 		if (goal == null) {
 			System.out.format("%d: Id: %s, No goal to set%n", clock.getCurrentMilliseconds(), id);
 			return;
@@ -208,6 +209,7 @@ public class CollectorRobot {
 			switch (positioning.getMoveBaseResult().status) {
 			case Succeeded:
 				System.out.format("%d: Id: %s, Goal reached: %s%n", clock.getCurrentMilliseconds(), id, goal);
+				monitor.reportReached(pos, id);
 				break;
 			case Rejected:
 				System.out.format("%d: Id: %s, Goal rejected: %s%n", clock.getCurrentMilliseconds(), id, goal);

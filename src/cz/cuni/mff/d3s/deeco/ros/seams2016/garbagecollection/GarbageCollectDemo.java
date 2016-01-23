@@ -1,5 +1,6 @@
 package cz.cuni.mff.d3s.deeco.ros.seams2016.garbagecollection;
 
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -123,8 +124,9 @@ public class GarbageCollectDemo {
 		// Simulate for 10 minutes
 		realm.start(600_000);
 
-		// print final report on reached garbage locations
+		// Print final report on reached garbage locations
 		monitor.printStatus();
+		monitor.writeStatsToFile("results" + File.separator + String.valueOf(System.currentTimeMillis()) + ".txt");
 
 		/**
 		 * Kill the whole JVM as ROS might not exit nicely

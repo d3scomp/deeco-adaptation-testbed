@@ -1,5 +1,8 @@
 package cz.cuni.mff.d3s.deeco.ros.seams2016.garbagecollection;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -121,6 +124,24 @@ public class PositionMonitor {
 		for (PositionInfo info : positions) {
 			System.out.println(info.toString());
 		}
+	}
+	
+	/**
+	 * Writes final statistics to file
+	 * 
+	 * @throws IOException 
+	 */
+	public void writeStatsToFile(String filename) throws IOException {
+		BufferedWriter out = new BufferedWriter(new FileWriter(filename));
+		for (PositionInfo info : positions) {
+			out.write(info.initialOwner);
+			out.write(" ");
+			out.write(info.reachedBy!=null?info.reachedBy:"none");
+			out.write(" ");
+			out.write(String.valueOf(info.reachedAtMs));
+			out.newLine();
+		}
+		out.close();
 	}
 
 	/**

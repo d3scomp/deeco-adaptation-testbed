@@ -21,67 +21,169 @@ import cz.cuni.mff.d3s.jdeeco.ros.datatypes.Orientation;
 import cz.cuni.mff.d3s.jdeeco.ros.datatypes.PoseWithCovariance;
 import cz.cuni.mff.d3s.jdeeco.ros.datatypes.ROSPosition;
 
+/**
+ * This class implements Collector robot component. It is used to control single collector robot which collects garbage
+ * at predefined location. The robot locally adapts to being stuck and if possible also remotely resolved deadlocks in
+ * movements of multiple robots.
+ * 
+ * @author Vladimir Matena <matena@d3s.mff.cuni.cz>
+ *
+ */
 @Component
 public class CollectorRobot {
-	public static double REACHED_POS_THRESH_M = 0.5;
-	public static double SAME_POS_THRESH_M = 0.01;
+	/**
+	 * Deterministic pseudo-random source
+	 * 
+	 * Used when robot wants to make random decision.
+	 */
 	static final Random random = new Random(42);
 
+	/**
+	 * Maximum distance to goal at which the goal is considered reached
+	 */
+	public static double REACHED_POS_THRESH_M = 0.5;
+
+	/**
+	 * Positions at this or shorter distance are considered equal
+	 */
+	public static double SAME_POS_THRESH_M = 0.01;
+
+	/**
+	 * State of the robot
+	 */
 	enum State {
-		Free, Blocked
+		/**
+		 * Robot is not blocked, can move at will
+		 */
+		Free,
+
+		/**
+		 * Robot is blocked. Want to move, but can't. It is time for recovery behaviors.
+		 */
+		Blocked
 	}
 
-	enum SelfRecoveryState {
-		GoalChange, RandomGoal
-	}
-
+	/**
+	 * When the robot is in blocked state for this time or longer local adaptation mechanisms kick-in.
+	 */
 	static final int BLOCKED_AUTORECOVERY_THRESHOLD_S = 6;
+
+	/**
+	 * How many times the robot needs to be found in the same place in order to declare it blocked.
+	 */
 	static final long NOCHANGE_POS_THRESH_CNT = 3;
 
+	/**
+	 * Current goal of the robot
+	 * 
+	 * This goal is followed by driveRobot process.
+	 */
 	public Position goal;
-	
+
+	/**
+	 * How many cycles is the robot blocked
+	 */
 	@Local
 	public Long blockedCounter;
-	
+
+	/**
+	 * Time-stamp of the last remote adaptation
+	 */
 	@Local
 	public Long lastAdoption;
-	
+
+	/**
+	 * Goals adopted from other robots
+	 * 
+	 * This needs to be non @Local as other robots needs to know and remove such goals.
+	 */
 	public Collection<Position> adoptedGoals;
 
-
+	/**
+	 * Goal currently set to robots navigation stack
+	 */
 	@Local
 	public Position curGoal;
 
 	/**
-	 * Id of the vehicle component.
+	 * Id of the robot component.
 	 */
 	public String id;
 
+	/**
+	 * Current robot's position
+	 */
 	public Position position;
 
+	/**
+	 * Current state of the robot
+	 */
 	public State state;
 
+	/**
+	 * Last position of the robot
+	 * 
+	 * Used to detect movement
+	 */
 	@Local
 	public Position oldPosition;
 
+	/**
+	 * Number of passes when the robot's position has not changed
+	 */
 	@Local
 	public Long noPosChangeCounter;
 
+	/**
+	 * List of garbage locations to be cleaned by robot
+	 */
 	@Local
 	public List<Position> route;
 
+	/**
+	 * Reference to robot sensors and actuators
+	 * 
+	 * In this example localization and routing is used
+	 */
 	@Local
 	public Positioning positioning;
 
+	/**
+	 * Reference to time provider
+	 */
 	@Local
 	public CurrentTimeProvider clock;
 
+	/**
+	 * Reference to monitor object
+	 * 
+	 * Monitor counts statistics about robot behavior.
+	 */
 	@Local
 	public PositionMonitor monitor;
 
+	/**
+	 * Generate random position within reachable space of the map
+	 */
 	@Local
 	public PositionGenerator positionGenerator;
 
+	/**
+	 * Constructor sets robots initial knowledge
+	 * 
+	 * @param id
+	 *            Robot's identification
+	 * @param positioning
+	 *            Reference to sensor and actuator provider
+	 * @param clock
+	 *            Reference to time source
+	 * @param garbage
+	 *            Initial list of garbage locations
+	 * @param monitor
+	 *            Reference to monitoring object
+	 * @param generator
+	 *            Reference to location generator
+	 */
 	public CollectorRobot(String id, Positioning positioning, CurrentTimeProvider clock, List<Position> garbage,
 			PositionMonitor monitor, PositionGenerator generator) {
 		this.id = id;
@@ -92,16 +194,22 @@ public class CollectorRobot {
 		this.positionGenerator = generator;
 		this.noPosChangeCounter = 0l;
 		this.adoptedGoals = new ArrayList<>();
-
-		state = State.Free;
+		this.state = State.Free;
+		this.blockedCounter = 0l;
 
 		// Set waypoints and initial goal
-		route = garbage;
-		goal = route.get(0);
-
-		blockedCounter = 0l;
+		this.route = garbage;
+		this.goal = route.get(0);
 	}
 
+	/**
+	 * Collects information from sensors
+	 * 
+	 * @param position
+	 *            Collected position
+	 * @param positioning
+	 *            Position sensor access object
+	 */
 	@Process
 	@PeriodicScheduling(period = 100)
 	public static void sense(@Out("position") ParamHolder<Position> position,
@@ -114,6 +222,9 @@ public class CollectorRobot {
 		}
 	}
 
+	/**
+	 * Reports robots status by printing information to console
+	 */
 	@Process
 	@PeriodicScheduling(period = 1000)
 	public static void reportStatus(@In("id") String id, @In("position") Position position,
@@ -125,6 +236,11 @@ public class CollectorRobot {
 				goal != null ? goal.euclidDistanceTo(position) : -1.0, curGoal, route.size());
 	}
 
+	/**
+	 * Local adaptation to robot blocking
+	 * 
+	 * If robot is blocked long enough this tries to set different goal from list of entirely random one.
+	 */
 	@Process
 	@PeriodicScheduling(period = 1000)
 	public static void autoUnblock(@In("id") String id, @In("clock") CurrentTimeProvider clock,
@@ -139,7 +255,7 @@ public class CollectorRobot {
 		}
 
 		if (blockedCounter.value > BLOCKED_AUTORECOVERY_THRESHOLD_S) {
-			System.out.println(">>>>>>> Auto unblocking: " + id + "<<<<<<");
+			System.out.println(">>>>>>> Auto unblocking robot " + id + "<<<<<<");
 
 			if (random.nextDouble() > (1.0 / (route.size() + 1.0)) && !route.isEmpty()) {
 				// Set completely random goal
@@ -158,6 +274,9 @@ public class CollectorRobot {
 		}
 	}
 
+	/**
+	 * Sets current goal according to garbage locations
+	 */
 	@Process
 	@PeriodicScheduling(period = 500)
 	public static void setGoal(@In("id") String id, @In("position") Position position,
@@ -185,6 +304,9 @@ public class CollectorRobot {
 		}
 	}
 
+	/**
+	 * Sets goal to robot navigation and routing stack
+	 */
 	@Process
 	@PeriodicScheduling(period = 2000)
 	public static void driveRobot(@In("id") String id, @In("position") Position pos,
@@ -224,9 +346,12 @@ public class CollectorRobot {
 		}
 	}
 
+	/**
+	 * Detects whenever the robot is blocked by chacking current and last position
+	 */
 	@Process
 	@PeriodicScheduling(period = 1000)
-	public static void driveRobot(@In("id") String id, @In("position") Position pos,
+	public static void detectBlocked(@In("id") String id, @In("position") Position pos,
 			@InOut("oldPosition") ParamHolder<Position> oldPos,
 			@InOut("noPosChangeCounter") ParamHolder<Long> noPosChangeCounter, @InOut("state") ParamHolder<State> state,
 			@In("goal") Position goal) {

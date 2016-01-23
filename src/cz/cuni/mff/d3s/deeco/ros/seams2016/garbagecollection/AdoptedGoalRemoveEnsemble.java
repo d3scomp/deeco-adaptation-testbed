@@ -25,6 +25,11 @@ import cz.cuni.mff.d3s.jdeeco.position.Position;
 @Ensemble
 @PeriodicScheduling(period = 3000)
 public class AdoptedGoalRemoveEnsemble {
+	/**
+	 * Ensemble membership
+	 * 
+	 * Returns true when there is way-point to remove from members route
+	 */
 	@Membership
 	public static boolean membership(@In("coord.id") String coordId, @In("coord.adoptedGoals") ArrayList<Position> coordAdopted,
 			@In("member.id") String memberId, @In("member.route") List<Position> memberRoute) {
@@ -46,6 +51,11 @@ public class AdoptedGoalRemoveEnsemble {
 		return false;
 	}
 
+	/**
+	 * Knowledge exchange
+	 * 
+	 * When membership test passes this removes the adopted waypoints
+	 */
 	@KnowledgeExchange
 	public static void exchange(@In("coord.adoptedGoals") ArrayList<Position> coordAdopted, @InOut("member.route") ParamHolder<List<Position>> memberRoute) {
 		System.err.println(AdoptedGoalRemoveEnsemble.class.getSimpleName() + " EXCHANGE");

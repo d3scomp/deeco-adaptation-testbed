@@ -19,11 +19,11 @@ import cz.cuni.mff.d3s.jdeeco.ros.sim.ROSSimulation;
 /**
  * Example of robots cleaning garbage
  * 
- * This simulation shows ${ROBOTS} robots in "corridor" map cleaning garbage from predefined locations. Each robot is
- * initially assigned ${GARBAGE_PER_ROBOT} garbage locations to visit.
+ * This simulation shows ROBOTS robots in "corridor" map cleaning garbage from predefined locations. Each robot is
+ * initially assigned GARBAGE_PER_ROBOT garbage locations to visit.
  * 
  * This class defines main method and can be directly launched as java application, but it is necessary to adjust
- * SIMUALTION_SERVER_ADDRESS to math the simulation server which needs to be executed in advice.
+ * SIMUALTION_SERVER_ADDRESS constant to math the simulation server which needs to be executed in advice.
  * 
  * @author Vladimir Matena <matena@d3s.mff.cuni.cz>
  *
@@ -42,7 +42,7 @@ public class GarbageCollectDemo {
 	/**
 	 * Number of robots in the simulation
 	 */
-	private static int ROBOTS = 4;
+	private static int NUM_ROBOTS = 4;
 	
 	/**
 	 * Colors of robots in simulation
@@ -95,7 +95,7 @@ public class GarbageCollectDemo {
 		PositionMonitor monitor = new PositionMonitor(rosSim.getTimer());
 
 		// Add robots
-		for (int i = 0; i < ROBOTS; ++i) {
+		for (int i = 0; i < NUM_ROBOTS; ++i) {
 			// Robot name
 			final String name = "Collector" + i;
 

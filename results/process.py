@@ -37,9 +37,13 @@ print("Generating images...")
 
 plt.figure()
 plt.boxplot(maxTimes)
+plt.title("Total running time till system completes or gives up")
+plt.ylabel("Running time in ms")
 plt.savefig("LastGoalReachTime.png")
 plt.figure()
 plt.boxplot(reachedTargets)
+plt.title("Number of cleaning tasks that were completed")
+plt.ylabel("Completed cleaning tasks")
 plt.savefig("ReachedTargets.png")
 
 print("All done")

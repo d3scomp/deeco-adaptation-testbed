@@ -15,9 +15,9 @@ import cz.cuni.mff.d3s.deeco.task.ParamHolder;
 import cz.cuni.mff.d3s.jdeeco.position.Position;
 
 /**
- * This ensemble removes goals adopted by other robots
+ * This ensemble removes destinations adopted by other robots
  * 
- * Goals adopted by coordinator are removed from members route.
+ * Destinations adopted by coordinator are removed from members route.
  * 
  * @author Vladimir Matena <matena@d3s.mff.cuni.cz>
  *
@@ -31,15 +31,15 @@ public class AdoptedDestinationRemoveEnsemble {
 	 * Returns true when there is way-point to remove from members route
 	 */
 	@Membership
-	public static boolean membership(@In("coord.id") String coordId, @In("coord.adoptedGoals") ArrayList<Position> coordAdopted,
+	public static boolean membership(@In("coord.id") String coordId, @In("coord.adoptedDestinations") ArrayList<Position> coordAdopted,
 			@In("member.id") String memberId, @In("member.route") List<Position> memberRoute) {
 		System.out.println(AdoptedDestinationRemoveEnsemble.class.getSimpleName() + " MEMBERSHIP:" + coordId + " -> " + memberId);
-		// Do not remove goals from ourself
+		// Do not remove destinations from ourself
 		if(coordId.equals(memberId)) {
 			return false;
 		}
 		
-		// If member has goal adopted by coordinator then do exchange
+		// If member has destination adopted by coordinator then do exchange
 		for(Position mbrPos: memberRoute) {
 			for(Position cordPos: coordAdopted)
 			if(mbrPos.euclidDistanceTo(cordPos) < CleanerRobot.SAME_POS_THRESH_M) {
@@ -57,15 +57,15 @@ public class AdoptedDestinationRemoveEnsemble {
 	 * When membership test passes this removes the adopted waypoints
 	 */
 	@KnowledgeExchange
-	public static void exchange(@In("coord.adoptedGoals") ArrayList<Position> coordAdopted, @InOut("member.route") ParamHolder<List<Position>> memberRoute) {
+	public static void exchange(@In("coord.adoptedDestinations") ArrayList<Position> coordAdopted, @InOut("member.route") ParamHolder<List<Position>> memberRoute) {
 		System.err.println(AdoptedDestinationRemoveEnsemble.class.getSimpleName() + " EXCHANGE");
 		
-		// If member has goal adopted by coordinator then remove it
+		// If member has destination adopted by coordinator then remove it
 		Collection<Position> toRemove = new HashSet<Position>();
 		for(Position mbrPos: memberRoute.value) {
 			for(Position cordPos: coordAdopted)
 			if(mbrPos.euclidDistanceTo(cordPos) < CleanerRobot.SAME_POS_THRESH_M) {
-				System.err.println("Removing adopted goal " + mbrPos);
+				System.err.println("Removing adopted destination " + mbrPos);
 				toRemove.add(mbrPos);
 			}
 		}

@@ -75,14 +75,14 @@ public class DestinationAdoptionEnsemble {
 	 */
 	@KnowledgeExchange
 	public static void exchange(@In("member.clock") CurrentTimeProvider clock, @In("coord.id") String coordId,
-			@In("member.id") String memberId, @In("coord.goal") Position coordGoal,
-			@InOut("member.goal") ParamHolder<Position> memberGoal,
+			@In("member.id") String memberId, @In("coord.destination") Position coordDestination,
+			@InOut("member.destination") ParamHolder<Position> memberDestination,
 			@InOut("member.blockedCounter") ParamHolder<Long> memberBlockedCounter,
 			@InOut("member.lastAdoption") ParamHolder<Long> lastAdoption,
-			@InOut("member.adoptedGoals") ParamHolder<ArrayList<Position>> memberAdopedGoals,
+			@InOut("member.adoptedDestinations") ParamHolder<ArrayList<Position>> memberAdopedDestinations,
 			@InOut("member.route") ParamHolder<List<Position>> memberRoute) {
 		System.err.println(DestinationAdoptionEnsemble.class.getSimpleName() + " EXCHANGE");
-		System.err.println("memberGoal: " + memberGoal.value + " coordGoal: " + coordGoal);
+		System.err.println("memberDestination: " + memberDestination.value + " coordDestination: " + coordDestination);
 		// Check if the member is blocked for long enough
 		if (memberBlockedCounter.value < BLOCKED_REMOTERECOVERY_THRESHOLD_S) {
 			System.err.println(memberId + " Not yet blocked for long enough");
@@ -97,11 +97,11 @@ public class DestinationAdoptionEnsemble {
 			return;
 		}
 
-		// Adopt coordinator's goal
-		System.err.println(memberId + " adopting " + coordGoal + " from " + coordId);
-		memberAdopedGoals.value.add(coordGoal);
-		memberGoal.value = coordGoal;
-		memberRoute.value.add(coordGoal);
+		// Adopt coordinator's destination
+		System.err.println(memberId + " adopting " + coordDestination + " from " + coordId);
+		memberAdopedDestinations.value.add(coordDestination);
+		memberDestination.value = coordDestination;
+		memberRoute.value.add(coordDestination);
 
 		// Reset counters
 		memberBlockedCounter.value = 0l;

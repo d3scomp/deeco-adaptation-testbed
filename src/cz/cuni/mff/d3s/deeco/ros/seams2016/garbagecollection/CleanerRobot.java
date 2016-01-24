@@ -39,7 +39,7 @@ public class CleanerRobot {
 	static final Random random = new Random(42);
 
 	/**
-	 * Maximum distance to goal at which the goal is considered reached
+	 * Maximum distance to destination at which the destination is considered reached
 	 */
 	public static double REACHED_POS_THRESH_M = 0.5;
 
@@ -74,11 +74,11 @@ public class CleanerRobot {
 	static final long NOCHANGE_POS_THRESH_CNT = 3;
 
 	/**
-	 * Current goal of the robot
+	 * Current destination of the robot
 	 * 
-	 * This goal is followed by driveRobot process.
+	 * This destination is followed by driveRobot process.
 	 */
-	public Position goal;
+	public Position destiantion;
 
 	/**
 	 * How many cycles is the robot blocked
@@ -93,17 +93,17 @@ public class CleanerRobot {
 	public Long lastAdoption;
 
 	/**
-	 * Goals adopted from other robots
+	 * Destinations adopted from other robots
 	 * 
-	 * This needs to be non @Local as other robots needs to know and remove such goals.
+	 * This needs to be non @Local as other robots needs to know and remove such destinations.
 	 */
-	public Collection<Position> adoptedGoals;
+	public Collection<Position> adoptedDestinations;
 
 	/**
-	 * Goal currently set to robots navigation stack
+	 * Destination currently set to robots navigation stack
 	 */
 	@Local
-	public Position curGoal;
+	public Position curDestination;
 
 	/**
 	 * Id of the robot component.
@@ -193,13 +193,13 @@ public class CleanerRobot {
 		this.monitor = monitor;
 		this.positionGenerator = generator;
 		this.noPosChangeCounter = 0l;
-		this.adoptedGoals = new ArrayList<>();
+		this.adoptedDestinations = new ArrayList<>();
 		this.state = State.Free;
 		this.blockedCounter = 0l;
 
-		// Set waypoints and initial goal
+		// Set waypoints and initial destination
 		this.route = garbage;
-		this.goal = route.get(0);
+		this.destiantion = route.get(0);
 	}
 
 	/**
@@ -228,24 +228,24 @@ public class CleanerRobot {
 	@Process
 	@PeriodicScheduling(period = 1000)
 	public static void reportStatus(@In("id") String id, @In("position") Position position,
-			@In("clock") CurrentTimeProvider clock, @In("goal") Position goal, @In("curGoal") Position curGoal,
+			@In("clock") CurrentTimeProvider clock, @In("destination") Position destination, @In("curDestination") Position curDestination,
 			@In("route") List<Position> route, @In("state") State state) {
 		System.out.format("%d: id: %s", clock.getCurrentMilliseconds(), id);
 		System.out.format(", pos: %s, state: %s", position.toString(), state);
-		System.out.format(", goal: (pos: %s, dist: %f, set: %s) remaining:%d%n", goal != null ? goal : "none",
-				goal != null ? goal.euclidDistanceTo(position) : -1.0, curGoal, route.size());
+		System.out.format(", destination: (pos: %s, dist: %f, set: %s) remaining:%d%n", destination != null ? destination : "none",
+				destination != null ? destination.euclidDistanceTo(position) : -1.0, curDestination, route.size());
 	}
 
 	/**
 	 * Local adaptation to robot blocking
 	 * 
-	 * If robot is blocked long enough this tries to set different goal from list of entirely random one.
+	 * If robot is blocked long enough this tries to set different destination from list of entirely random one.
 	 */
 	@Process
 	@PeriodicScheduling(period = 1000)
 	public static void autoUnblock(@In("id") String id, @In("clock") CurrentTimeProvider clock,
 			@InOut("blockedCounter") ParamHolder<Long> blockedCounter, @InOut("state") ParamHolder<State> state,
-			@InOut("goal") ParamHolder<Position> goal, @In("positionGenerator") PositionGenerator generator,
+			@InOut("destination") ParamHolder<Position> destination, @In("positionGenerator") PositionGenerator generator,
 			@In("route") List<Position> route) {
 		// Increase blocked counter
 		if (state.value == State.Blocked) {
@@ -258,16 +258,16 @@ public class CleanerRobot {
 			System.out.println(">>>>>>> Auto unblocking robot " + id + "<<<<<<");
 
 			if (random.nextDouble() > (1.0 / (route.size() + 1.0)) && !route.isEmpty()) {
-				// Set completely random goal
-				goal.value = generator.getRandomPosition();
+				// Set completely random destination
+				destination.value = generator.getRandomPosition();
 				System.out.println("Random");
 			} else {
-				// Set random goal from list
+				// Set random destination from list
 				System.out.println("Another");
-				goal.value = route.get(random.nextInt(route.size()));
+				destination.value = route.get(random.nextInt(route.size()));
 			}
 
-			System.out.println("New goal: " + goal.value);
+			System.out.println("New destination: " + destination.value);
 
 			state.value = State.Free;
 			blockedCounter.value = 0l;
@@ -275,12 +275,12 @@ public class CleanerRobot {
 	}
 
 	/**
-	 * Sets current goal according to garbage locations
+	 * Sets current destination according to garbage locations
 	 */
 	@Process
 	@PeriodicScheduling(period = 500)
 	public static void setDestination(@In("id") String id, @In("position") Position position,
-			@InOut("route") ParamHolder<List<Position>> route, @InOut("goal") ParamHolder<Position> goal,
+			@InOut("route") ParamHolder<List<Position>> route, @InOut("destination") ParamHolder<Position> destination,
 			@In("clock") CurrentTimeProvider clock, @In("monitor") PositionMonitor monitor) {
 		// Report and remove reached position
 		List<Position> toRemove = new LinkedList<>();
@@ -292,52 +292,52 @@ public class CleanerRobot {
 		}
 		route.value.removeAll(toRemove);
 
-		if (goal.value == null || position.euclidDistanceTo(goal.value) < REACHED_POS_THRESH_M) {
-			// Try to set new goal
+		if (destination.value == null || position.euclidDistanceTo(destination.value) < REACHED_POS_THRESH_M) {
+			// Try to set new destination
 			if (route.value.isEmpty()) {
 				System.out.format("%d: Id: %s, No more waypoints to reach%n", clock.getCurrentMilliseconds(), id);
-				goal.value = null;
+				destination.value = null;
 			} else {
-				System.out.format("%d: Id: %s, Setting next waypoint as goal%n", clock.getCurrentMilliseconds(), id);
-				goal.value = route.value.get(0);
+				System.out.format("%d: Id: %s, Setting next waypoint as destination%n", clock.getCurrentMilliseconds(), id);
+				destination.value = route.value.get(0);
 			}
 		}
 	}
 
 	/**
-	 * Sets goal to robot navigation and routing stack
+	 * Sets destination to robot navigation and routing stack
 	 */
 	@Process
 	@PeriodicScheduling(period = 2000)
 	public static void driveRobot(@In("id") String id, @In("position") Position pos,
-			@In("positioning") Positioning positioning, @In("goal") Position goal,
-			@InOut("curGoal") ParamHolder<Position> curGoal, @In("clock") CurrentTimeProvider clock,
+			@In("positioning") Positioning positioning, @In("destination") Position destination,
+			@InOut("curDestination") ParamHolder<Position> curDestination, @In("clock") CurrentTimeProvider clock,
 			@InOut("state") ParamHolder<State> state, @In("monitor") PositionMonitor monitor) throws Exception {
-		if (goal == null) {
-			System.out.format("%d: Id: %s, No goal to set%n", clock.getCurrentMilliseconds(), id);
+		if (destination == null) {
+			System.out.format("%d: Id: %s, No destination to set%n", clock.getCurrentMilliseconds(), id);
 			return;
 		}
 
-		// Set goal if not yet set
-		if (curGoal.value == null || goal.euclidDistanceTo(curGoal.value) > SAME_POS_THRESH_M
+		// Set destination if not yet set
+		if (curDestination.value == null || destination.euclidDistanceTo(curDestination.value) > SAME_POS_THRESH_M
 				|| positioning.getMoveBaseResult() == null) {
-			System.out.format("%d: Id: %s, Setting goal%n", clock.getCurrentMilliseconds(), id);
-			positioning.setSimpleGoal(ROSPosition.fromPosition(goal), new Orientation(0, 0, 0, 1));
-			curGoal.value = goal;
+			System.out.format("%d: Id: %s, Setting destination%n", clock.getCurrentMilliseconds(), id);
+			positioning.setSimpleGoal(ROSPosition.fromPosition(destination), new Orientation(0, 0, 0, 1));
+			curDestination.value = destination;
 		}
 
 		// Process move result
-		if (positioning.getMoveBaseResult() != null && goal.euclidDistanceTo(pos) < SAME_POS_THRESH_M) {
+		if (positioning.getMoveBaseResult() != null && destination.euclidDistanceTo(pos) < SAME_POS_THRESH_M) {
 			switch (positioning.getMoveBaseResult().status) {
 			case Succeeded:
-				System.out.format("%d: Id: %s, Goal reached: %s%n", clock.getCurrentMilliseconds(), id, goal);
+				System.out.format("%d: Id: %s, Goal reached: %s%n", clock.getCurrentMilliseconds(), id, destination);
 				monitor.reportReached(pos, id);
 				break;
 			case Rejected:
-				System.out.format("%d: Id: %s, Goal rejected: %s%n", clock.getCurrentMilliseconds(), id, goal);
+				System.out.format("%d: Id: %s, Goal rejected: %s%n", clock.getCurrentMilliseconds(), id, destination);
 				break;
 			case Canceled:
-				System.out.format("%d: Id: %s, Goal canceled: %s%n", clock.getCurrentMilliseconds(), id, goal);
+				System.out.format("%d: Id: %s, Goal canceled: %s%n", clock.getCurrentMilliseconds(), id, destination);
 				break;
 			default:
 				System.out.format("%d: Id: %s, unknown result: %s%n", clock.getCurrentMilliseconds(), id,
@@ -347,21 +347,21 @@ public class CleanerRobot {
 	}
 
 	/**
-	 * Detects whenever the robot is blocked by chacking current and last position
+	 * Detects whenever the robot is blocked by checking the current and the last position
 	 */
 	@Process
 	@PeriodicScheduling(period = 1000)
 	public static void detectBlocked(@In("id") String id, @In("position") Position pos,
 			@InOut("oldPosition") ParamHolder<Position> oldPos,
 			@InOut("noPosChangeCounter") ParamHolder<Long> noPosChangeCounter, @InOut("state") ParamHolder<State> state,
-			@In("goal") Position goal) {
+			@In("destination") Position destination) {
 		// If we have nothing to do just return
-		if (goal == null) {
+		if (destination == null) {
 			return;
 		}
 		// Increment no change counter
 		boolean noMove = oldPos.value != null && oldPos.value.euclidDistanceTo(pos) < SAME_POS_THRESH_M;
-		boolean wantMove = pos.euclidDistanceTo(goal) > REACHED_POS_THRESH_M;
+		boolean wantMove = pos.euclidDistanceTo(destination) > REACHED_POS_THRESH_M;
 		if (wantMove && noMove) {
 			noPosChangeCounter.value++;
 		} else {

@@ -78,7 +78,7 @@ public class CleanerRobot {
 	 * 
 	 * This destination is followed by driveRobot process.
 	 */
-	public Position destiantion;
+	public Position destination;
 
 	/**
 	 * How many cycles is the robot blocked
@@ -199,7 +199,7 @@ public class CleanerRobot {
 
 		// Set waypoints and initial destination
 		this.route = garbage;
-		this.destiantion = route.get(0);
+		this.destination = route.get(0);
 	}
 
 	/**

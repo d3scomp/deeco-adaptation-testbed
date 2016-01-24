@@ -30,7 +30,7 @@ import cz.cuni.mff.d3s.jdeeco.ros.datatypes.ROSPosition;
  *
  */
 @Component
-public class CollectorRobot {
+public class CleanerRobot {
 	/**
 	 * Deterministic pseudo-random source
 	 * 
@@ -184,7 +184,7 @@ public class CollectorRobot {
 	 * @param generator
 	 *            Reference to location generator
 	 */
-	public CollectorRobot(String id, Positioning positioning, CurrentTimeProvider clock, List<Position> garbage,
+	public CleanerRobot(String id, Positioning positioning, CurrentTimeProvider clock, List<Position> garbage,
 			PositionMonitor monitor, PositionGenerator generator) {
 		this.id = id;
 		this.positioning = positioning;
@@ -279,7 +279,7 @@ public class CollectorRobot {
 	 */
 	@Process
 	@PeriodicScheduling(period = 500)
-	public static void setGoal(@In("id") String id, @In("position") Position position,
+	public static void setDestination(@In("id") String id, @In("position") Position position,
 			@InOut("route") ParamHolder<List<Position>> route, @InOut("goal") ParamHolder<Position> goal,
 			@In("clock") CurrentTimeProvider clock, @In("monitor") PositionMonitor monitor) {
 		// Report and remove reached position

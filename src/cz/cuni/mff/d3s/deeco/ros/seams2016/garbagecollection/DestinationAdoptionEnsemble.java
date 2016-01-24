@@ -9,7 +9,7 @@ import cz.cuni.mff.d3s.deeco.annotations.InOut;
 import cz.cuni.mff.d3s.deeco.annotations.KnowledgeExchange;
 import cz.cuni.mff.d3s.deeco.annotations.Membership;
 import cz.cuni.mff.d3s.deeco.annotations.PeriodicScheduling;
-import cz.cuni.mff.d3s.deeco.ros.seams2016.garbagecollection.CollectorRobot.State;
+import cz.cuni.mff.d3s.deeco.ros.seams2016.garbagecollection.CleanerRobot.State;
 import cz.cuni.mff.d3s.deeco.task.ParamHolder;
 import cz.cuni.mff.d3s.deeco.timer.CurrentTimeProvider;
 import cz.cuni.mff.d3s.jdeeco.position.Position;
@@ -35,7 +35,7 @@ import cz.cuni.mff.d3s.jdeeco.position.Position;
  */
 @Ensemble
 @PeriodicScheduling(period = 3000)
-public class BlockedGoalAdoptEnsemble {
+public class DestinationAdoptionEnsemble {
 	/**
 	 * Maximum distance in between deadlocked robots
 	 */
@@ -81,7 +81,7 @@ public class BlockedGoalAdoptEnsemble {
 			@InOut("member.lastAdoption") ParamHolder<Long> lastAdoption,
 			@InOut("member.adoptedGoals") ParamHolder<ArrayList<Position>> memberAdopedGoals,
 			@InOut("member.route") ParamHolder<List<Position>> memberRoute) {
-		System.err.println(BlockedGoalAdoptEnsemble.class.getSimpleName() + " EXCHANGE");
+		System.err.println(DestinationAdoptionEnsemble.class.getSimpleName() + " EXCHANGE");
 		System.err.println("memberGoal: " + memberGoal.value + " coordGoal: " + coordGoal);
 		// Check if the member is blocked for long enough
 		if (memberBlockedCounter.value < BLOCKED_REMOTERECOVERY_THRESHOLD_S) {

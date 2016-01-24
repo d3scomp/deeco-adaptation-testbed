@@ -114,11 +114,11 @@ public class GarbageCollectDemo {
 
 			// Deploy Collector robot component
 			robot.deployComponent(
-					new CollectorRobot(name, positioning, rosSim.getTimer(), garbage, monitor, generator));
+					new CleanerRobot(name, positioning, rosSim.getTimer(), garbage, monitor, generator));
 
 			// Deploy ensembles
-			robot.deployEnsemble(BlockedGoalAdoptEnsemble.class);
-			robot.deployEnsemble(AdoptedGoalRemoveEnsemble.class);
+			robot.deployEnsemble(DestinationAdoptionEnsemble.class);
+			robot.deployEnsemble(AdoptedDestinationRemoveEnsemble.class);
 		}
 
 		// Simulate for 10 minutes

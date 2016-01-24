@@ -110,7 +110,7 @@ public class PositionMonitor {
 	 */
 	public void reportReached(Position position, String reachedBy) {
 		for (PositionInfo posInfo : positions) {
-			if (posInfo.position.euclidDistanceTo(position) < CollectorRobot.SAME_POS_THRESH_M) {
+			if (posInfo.position.euclidDistanceTo(position) < CleanerRobot.SAME_POS_THRESH_M) {
 				posInfo.reached(reachedBy, clock.getCurrentMilliseconds());
 			}
 		}

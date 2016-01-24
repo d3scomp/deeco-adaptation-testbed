@@ -24,7 +24,7 @@ import cz.cuni.mff.d3s.jdeeco.position.Position;
  */
 @Ensemble
 @PeriodicScheduling(period = 3000)
-public class AdoptedGoalRemoveEnsemble {
+public class AdoptedDestinationRemoveEnsemble {
 	/**
 	 * Ensemble membership
 	 * 
@@ -33,7 +33,7 @@ public class AdoptedGoalRemoveEnsemble {
 	@Membership
 	public static boolean membership(@In("coord.id") String coordId, @In("coord.adoptedGoals") ArrayList<Position> coordAdopted,
 			@In("member.id") String memberId, @In("member.route") List<Position> memberRoute) {
-		System.out.println(AdoptedGoalRemoveEnsemble.class.getSimpleName() + " MEMBERSHIP:" + coordId + " -> " + memberId);
+		System.out.println(AdoptedDestinationRemoveEnsemble.class.getSimpleName() + " MEMBERSHIP:" + coordId + " -> " + memberId);
 		// Do not remove goals from ourself
 		if(coordId.equals(memberId)) {
 			return false;
@@ -42,8 +42,8 @@ public class AdoptedGoalRemoveEnsemble {
 		// If member has goal adopted by coordinator then do exchange
 		for(Position mbrPos: memberRoute) {
 			for(Position cordPos: coordAdopted)
-			if(mbrPos.euclidDistanceTo(cordPos) < CollectorRobot.SAME_POS_THRESH_M) {
-				System.out.println(AdoptedGoalRemoveEnsemble.class.getSimpleName() + " members");
+			if(mbrPos.euclidDistanceTo(cordPos) < CleanerRobot.SAME_POS_THRESH_M) {
+				System.out.println(AdoptedDestinationRemoveEnsemble.class.getSimpleName() + " members");
 				return true;
 			}
 		}
@@ -58,13 +58,13 @@ public class AdoptedGoalRemoveEnsemble {
 	 */
 	@KnowledgeExchange
 	public static void exchange(@In("coord.adoptedGoals") ArrayList<Position> coordAdopted, @InOut("member.route") ParamHolder<List<Position>> memberRoute) {
-		System.err.println(AdoptedGoalRemoveEnsemble.class.getSimpleName() + " EXCHANGE");
+		System.err.println(AdoptedDestinationRemoveEnsemble.class.getSimpleName() + " EXCHANGE");
 		
 		// If member has goal adopted by coordinator then remove it
 		Collection<Position> toRemove = new HashSet<Position>();
 		for(Position mbrPos: memberRoute.value) {
 			for(Position cordPos: coordAdopted)
-			if(mbrPos.euclidDistanceTo(cordPos) < CollectorRobot.SAME_POS_THRESH_M) {
+			if(mbrPos.euclidDistanceTo(cordPos) < CleanerRobot.SAME_POS_THRESH_M) {
 				System.err.println("Removing adopted goal " + mbrPos);
 				toRemove.add(mbrPos);
 			}

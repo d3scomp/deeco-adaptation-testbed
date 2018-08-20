@@ -48,7 +48,7 @@
 		<dependency>
 			<groupId>cz.cuni.mff.d3s.jdeeco</groupId>
 			<artifactId>cz.cuni.mff.d3s.jdeeco.core</artifactId>
-			<version>3.0.2</version>
+			<version>3.0.4</version>
 		</dependency>
 		<dependency>
 			<groupId>cz.cuni.mff.d3s.jdeeco</groupId>
@@ -56,6 +56,16 @@
 			<version>3.0.4</version>
 		</dependency>
 	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.ros.rosjava_bootstrap</groupId>
+				<artifactId>message_generation</artifactId>
+				<version>0.3.0</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	
 	<repositories>
  		<repository>
